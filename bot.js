@@ -1,19 +1,30 @@
-// DANH SÁCH TÊN KHÁCH HÀNG GIẢ LẬP ĐỂ CÁC BOT ĐẤU VỚI NHAU KHÔNG BỊ TRÙNG LẶP, CỰC KỲ THẬT
-const FAKE_BOT_NAMES = [
-    "Khánh_Linh", "Minh_Quân", "Tuấn_Anh", "Bảo_Thy", "Hoàng_Long", "Thùy_Dương", 
-    "Hải_Đăng", "Phương_Thảo", "Quốc_Cường", "Thành_Đạt", "Ánh_Tuyết", "Đức_Phúc", 
-    "Hồng_Nhung", "Tiến_Dũng", "Kim_Oanh", "Văn_Nam", "Thu_Trang", "Gia_Bảo"
+// KHO TÊN THUẦN VIỆT 100% (KHÔNG SỐ, KHÔNG CHỮ CÁI LẠ, GIỐNG NGƯỜI THẬT HOÀN TOÀN)
+const FIRST_NAMES = ["Nguyễn ", "Trần ", "Lê ", "Phạm ", "Hoàng ", "Huỳnh ", "Phan ", "Vũ ", "Đặng ", "Bùi "];
+const MIDDLE_AND_LAST_NAMES = [
+    "Thành Danh", "Minh Quân", "Tuấn Anh", "Khánh Linh", "Bảo Thy", "Hoàng Long", 
+    "Thùy Dương", "Hải Đăng", "Phương Thảo", "Quốc Cường", "Thành Đạt", "Ánh Tuyết", 
+    "Đức Phúc", "Hồng Nhung", "Tiến Dũng", "Kim Oanh", "Văn Nam", "Thu Trang", 
+    "Gia Bảo", "Thanh Hải", "Trọng Nhân", "Hữu Phước", "Như Quỳnh", "Nhật Mai"
 ];
 
-function getRandomBotName() {
-    const randomName = FAKE_BOT_NAMES[Math.floor(Math.random() * FAKE_BOT_NAMES.length)];
-    return randomName + "_" + Math.floor(10 + Math.random() * 90);
+// Mảng chứa toàn bộ các tên tạo lập để app.js tra cứu so khớp danh tính ngầm
+const ALL_PURE_VIET_NAMES = [];
+(function generateAllBotNamesCache() {
+    FIRST_NAMES.forEach(f => {
+        MIDDLE_AND_LAST_NAMES.forEach(m => {
+            ALL_PURE_VIET_NAMES.push(f + m);
+        });
+    });
+})();
+
+function getRandomPureVietName() {
+    return ALL_PURE_VIET_NAMES[Math.floor(Math.random() * ALL_PURE_VIET_NAMES.length)];
 }
 
 // HÀM RESET GIẢ LẬP TRẬN ĐẤU CỦA 2 BOT Ở 7 PHÒNG ĐẦU TIÊN LIÊN TỤC
 function resetBotVersusRoom(roomIndex) {
-    const b1 = "botAI_" + getRandomBotName();
-    const b2 = "botAI_" + getRandomBotName();
+    const b1 = getRandomPureVietName();
+    const b2 = getRandomPureVietName();
     const roomId = 'room_' + roomIndex;
 
     firebase.database().ref('rooms/' + roomId).set({
@@ -28,9 +39,8 @@ function resetBotVersusRoom(roomIndex) {
     });
 }
 
-// VÒNG LẶP CHO 2 BOT TỰ ĐẤU TRẬN GIẢ LẬP ĐỐI KHÁNG GAY GẮT TRÊN SERVER
+// VÒNG LẶP CHO 2 BOT TỰ ĐẤU TRẬN GIẢ LẬP ĐỐI KHÁNG GAY GẮT TRÊN SERVER TRÔNG NHƯ ĐANG CÓ NGƯỜI CHƠI THẬT
 function runBotVersusLoop(roomId) {
-    // Đặt thời gian Bot suy nghĩ thực tế từ 1.8 đến 3.5 giây để cờ chạy dồn dập
     setTimeout(() => {
         if (currentRoomId !== roomId) return; 
         
@@ -45,14 +55,14 @@ function runBotVersusLoop(roomId) {
             let movesArr = room.moves ? room.moves.split(';') : [];
             const botRole = room.turn; 
             
-            // AI phân tích chiến thuật tấn công và chặn đòn chí mạng lẫn nhau
+            // AI phân tích chiến thuật tấn công và chặn đòn chí mạng lẫn nhau cực gắt
             const aiMove = computeAdvancedAIMinimax(movesArr, botRole);
             movesArr.push(`${aiMove.r},${aiMove.c},${botRole}`);
             const updatedMovesStr = movesArr.filter(Boolean).join(';');
             
             const isWin = checkWinCondition(aiMove.r, aiMove.c, botRole, movesArr);
             
-            if(isWin || movesArr.length >= 250) { // Đủ nước cờ kết thúc ván hoặc hòa ván lớn
+            if(isWin || movesArr.length >= 250) { 
                 firebase.database().ref('rooms/' + roomId).update({
                     moves: updatedMovesStr,
                     status: 'ended'
@@ -66,15 +76,15 @@ function runBotVersusLoop(roomId) {
             }
             runBotVersusLoop(roomId);
         });
-    }, Math.floor(1800 + Math.random() * 1700));
+    }, Math.floor(1800 + Math.random() * 1700)); // Nhịp độ hạ quân tự nhiên từ 1.8s đến 3.5s
 }
 
-// HÀM KIỂM TRA VÀ TỰ ĐỘNG CHO BOT ĐÓNG GIẢ NGƯỜI CHƠI THẬT SAU 5 GIÂY ĐỢI LÂU
+// HÀM KIỂM TRA VÀ TỰ ĐỘNG CHO BOT ĐÓNG GIẢ NGƯỜI CHƠI THẬT VÀO GHÉP CÙNG SAU 5 GIÂY ĐỢI LÂU
 function checkAndTriggerFakePlayerBot(roomId) {
     firebase.database().ref('rooms/' + roomId).once('value', snap => {
         const room = snap.val();
         if(room && room.status === 'waiting' && (!room.p2 || room.p2 === '')) {
-            const fakePlayerName = "NgườiChơi_" + Math.floor(100000 + Math.random() * 900000);
+            const fakePlayerName = getRandomPureVietName(); // Sử dụng tên Việt thuần túy không lộ vết
             
             firebase.database().ref('rooms/' + roomId).update({
                 p2: fakePlayerName,
@@ -85,7 +95,7 @@ function checkAndTriggerFakePlayerBot(roomId) {
     });
 }
 
-// KÍCH HOẠT BOT KHI NGƯỜI CHƠI THẬT ĐẤU VỚI MÁY (KHI ĐẾN LƯỢT ĐƯỜNG ĐI CỦA BOT)
+// KÍCH HOẠT BOT KHI NGƯỜI CHƠI THẬT ĐẤU VỚI MÁY
 function triggerBotAIMove(roomId, movesArr) {
     const delay = Math.floor(1500 + Math.random() * 1500); 
     setTimeout(() => {
@@ -133,7 +143,8 @@ function computeAdvancedAIMinimax(movesArr, botRole) {
     const searchRange = 2; 
 
     for(let r = 2; r < 78; r++) {
-        for(let c = 2; c < 78; c++) {
+        for(let c = 2; r < 78; c++) { // Vòng lặp bảo mật tính chu vi ô cờ ảo
+            if(c >= 78) break;
             if(grid[`${r}_${c}`]) continue; 
 
             let nearPiece = false;
@@ -149,8 +160,8 @@ function computeAdvancedAIMinimax(movesArr, botRole) {
             const attackScore = evaluateCellForRole(r, c, botRole, grid);
             const defenseScore = evaluateCellForRole(r, c, enemyRole, grid);
             
-            // Các Bot tranh đấu cực gắt: Ưu tiên bẫy tấn công tạo 4 nước và triệt hạ chặn 3 của đối phương cực mạnh
-            const finalScore = attackScore + (defenseScore * 1.15);
+            // Tỷ lệ chặn đòn gắt: Tăng hệ số phòng thủ lên 1.25 để ép bot chặn đứt nước 3 nước 4 cực căng, liên tục ép sân nhau
+            const finalScore = attackScore + (defenseScore * 1.25);
 
             if(finalScore > bestScore) {
                 bestScore = finalScore;
@@ -185,13 +196,13 @@ function evaluateCellForRole(r, c, role, grid) {
         if(!grid[`${rr}_${cc}`]) openEnds++; 
 
         if(count >= 4) {
-            totalScore += (openEnds === 2) ? 12000 : 6000; 
+            totalScore += (openEnds === 2) ? 15000 : 8000; 
         } else if(count === 3) {
-            totalScore += (openEnds === 2) ? 3000 : 700;  
+            totalScore += (openEnds === 2) ? 4000 : 1000;  
         } else if(count === 2) {
-            totalScore += (openEnds === 2) ? 500 : 150;
+            totalScore += (openEnds === 2) ? 600 : 200;
         } else if(count === 1) {
-            totalScore += 15;
+            totalScore += 20;
         }
     }
     return totalScore;

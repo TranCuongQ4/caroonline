@@ -13,14 +13,14 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const database = firebase.database();
 
-// Biến trạng thái toàn cục của người chơi hiện tại
+// Biến trạng thái toàn cục của người chơi hiện tại - Mặc định dạng caro123456 như anh yêu cầu
 let myUsername = "caro" + Math.floor(100000 + Math.random() * 900000);
 let currentRoomId = null;
-let myRole = null; // 'p1' (Trắng), 'p2' (Đen), hoặc 'viewer' (Người xem)
-let selectedPreviewMove = null; // Nước đi nhấp thử nhưng chưa bấm xác nhận
+let myRole = null; // 'p1', 'p2', hoặc 'viewer'
+let selectedPreviewMove = null; 
 let gameCountdownInterval = null;
-let botMatchmakerTimeout = null; // Vòng hẹn giờ gọi Bot giả lập người chơi
-const BOARD_SIZE = 80; // Bản cờ ảo 80x80 ô để cuộn thoải mái
+let botMatchmakerTimeout = null; 
+const BOARD_SIZE = 80; 
 
 // Các phần tử DOM cần tương tác
 const screenLobby = document.getElementById('screen-lobby');
@@ -29,17 +29,31 @@ const roomListContainer = document.getElementById('room-list');
 const boardCanvas = document.getElementById('board-canvas');
 const boardWrapper = document.getElementById('board-wrapper');
 const btnConfirmMove = document.getElementById('btn-confirm-move');
+const displayMyUsername = document.getElementById('display-my-username');
+const btnChangeUsername = document.getElementById('btn-change-username');
 
 // CHẶN CHUỘT PHẢI
 document.addEventListener('contextmenu', e => e.preventDefault());
 
 // KHỞI ĐỘNG HỆ THỐNG
 window.onload = function() {
+    // Hiển thị tên caro mặc định lên thanh công cụ sảnh chờ ban đầu
+    displayMyUsername.innerText = myUsername;
+
     initLobbySystem();
     setupCanvasGrid();
     setupDragToScroll();
     
-    // CHỦ PHÒNG HOẶC SERVER TỰ ĐỘNG QUÉT DỌN PHÒNG TREO QUÁ 2 PHÚT MỖI 10 GIÂY
+    // ĐĂNG KÝ SỰ KIỆN ĐỔI TÊN TÙY THÍCH CHO NGƯỜI CHƠI
+    btnChangeUsername.onclick = function() {
+        const newName = prompt("Nhập tên mới của bạn (Viết liền không dấu hoặc có dấu tùy thích):", myUsername);
+        if(newName && newName.trim() !== "") {
+            myUsername = newName.trim();
+            displayMyUsername.innerText = myUsername;
+        }
+    };
+
+    // QUÉT DỌN PHÒNG TREO QUÁ 2 PHÚT MỖI 10 GIÂY
     setInterval(cleanUpAbandonedRooms, 10000);
 };
 
@@ -83,9 +97,8 @@ function setupDragToScroll() {
     });
 }
 
-// XỬ LÝ SẢNH CHỜ VÀ BẢY (7) PHÒNG BOT "CHIM MỒI" MẶC ĐỊNH KHÔNG ĐỔI
+// XỬ LÝ SẢNH CHỜ VÀ BẢY (7) PHÒNG BOT "CHIM MỒI" MẶC ĐỊNH
 function initLobbySystem() {
-    // Tăng lên 7 phòng Bot tự động đối đầu gay gắt liên tục
     for (let i = 1; i <= 7; i++) {
         database.ref('rooms/room_' + i).once('value', snapshot => {
             if (!snapshot.exists()) {
@@ -116,7 +129,7 @@ function initLobbySystem() {
         const pass = document.getElementById('input-room-pass').value.trim();
         database.ref('rooms').once('value', snap => {
             const data = snap.val() || {};
-            let nextIndex = 8; // Bắt đầu phòng tự tạo từ số 8 trở đi
+            let nextIndex = 8; 
             while(data['room_' + nextIndex]) { nextIndex++; }
             
             const newRoomId = 'room_' + nextIndex;
@@ -128,7 +141,7 @@ function initLobbySystem() {
                 turn: 'p1',
                 moves: '',
                 timer: 60,
-                createdAt: Date.now() // Lưu thời gian tạo để tính 2 phút hủy phòng
+                createdAt: Date.now() 
             }).then(() => {
                 joinGameRoom(newRoomId);
             });
@@ -256,7 +269,7 @@ function listenToRoomUpdates(roomId) {
     database.ref('rooms/' + roomId).on('value', snapshot => {
         const room = snapshot.val();
         
-        // Nếu phòng tự tạo bị xóa ngầm từ hệ thống, đá người chơi đang kẹt ra phòng chờ ngay lập tức
+        // Nếu phòng tự tạo bị xóa ngầm, đá người chơi kẹt ra sảnh chờ lập tức
         if(!room) {
             const idx = parseInt(roomId.replace('room_', ''));
             if(idx > 7 && currentRoomId === roomId) {
@@ -267,7 +280,7 @@ function listenToRoomUpdates(roomId) {
                 myRole = null;
                 screenGame.classList.remove('active');
                 screenLobby.classList.add('active');
-                alert("Phòng chờ quá lâu không có người vào đấu nên hệ thống đã tự hủy phòng!");
+                alert("Phòng chờ quá lâu không có người vào đấu hoặc đối thủ đã thoát ván, hệ thống đã đóng phòng!");
             }
             return;
         }
@@ -302,7 +315,8 @@ function listenToRoomUpdates(roomId) {
             startLocalCountdown(room);
         }
 
-        if(room.status === 'playing' && room.turn === 'p2' && room.p2 && (room.p2.startsWith('botAI_') || room.p2.startsWith('NgườiChơi_'))) {
+        // ĐỐI ĐẦU VỚI BOT (ĐÃ ĐƯỢC ẨN TÊN THUẦN VIỆT ĐỂ BẢO MẬT)
+        if(room.status === 'playing' && room.turn === 'p2' && room.p2 && isBotAccount(room.p2)) {
             if(myRole === 'p1') {
                 triggerBotAIMove(roomId, movesArr);
             }
@@ -325,6 +339,16 @@ function listenToRoomUpdates(roomId) {
     });
 }
 
+// KIỂM TRA ACCOUNT CÓ PHẢI LÀ BOT GIẢ LẬP KHÔNG
+function isBotAccount(name) {
+    if(!name) return false;
+    // Nhận diện tài khoản Bot thông qua mảng tên lưu ngầm bên bot.js
+    if(typeof ALL_PURE_VIET_NAMES !== 'undefined') {
+        return ALL_PURE_VIET_NAMES.includes(name);
+    }
+    return false;
+}
+
 // THỦ TỤC QUÉT HỦY VÀ ĐÁ NGƯỜI DÙNG KHI PHÒNG CHỜ TREO TRÊN 2 PHÚT HOẶC KHÔNG NGƯỜI
 function cleanUpAbandonedRooms() {
     database.ref('rooms').once('value', snap => {
@@ -333,19 +357,17 @@ function cleanUpAbandonedRooms() {
         
         Object.keys(allRooms).forEach(roomId => {
             const idx = parseInt(roomId.replace('room_', ''));
-            if(idx <= 7) return; // Không động vào 7 phòng Bot mặc định bên trên
+            if(idx <= 7) return; 
 
             const room = allRooms[roomId];
             
-            // Trường hợp 1: Phòng rỗng hoàn toàn không có ai bên trong
             if(!room.p1 && !room.p2) {
                 database.ref('rooms/' + roomId).remove();
                 return;
             }
 
-            // Trường hợp 2: Phòng kẹt trạng thái Chờ (Waiting) quá 2 phút (120000ms) không có đối thủ
             if(room.status === 'waiting' && room.createdAt && (now - room.createdAt > 120000)) {
-                database.ref('rooms/' + roomId).remove(); // Xóa trên Firebase để kích hoạt đá người chơi kẹt ra sảnh
+                database.ref('rooms/' + roomId).remove(); 
             }
         });
     });
@@ -436,7 +458,7 @@ document.getElementById('btn-confirm-move').onclick = function() {
     });
 };
 
-// THUẬT TOÁN QUÉT KIỂM TRA ĐIỀU KIỆN THẮNG (KHÔNG CHẶN 2 ĐẦU)
+// THUẬT TOÁN QUÉT KIỂM TRA ĐIỀU KIỆN THẮNG
 function checkWinCondition(r, c, role, movesArr) {
     const grid = {};
     movesArr.forEach(m => {
@@ -470,6 +492,29 @@ function checkWinCondition(r, c, role, movesArr) {
 document.getElementById('btn-send-chat').onclick = sendChatMessage;
 document.getElementById('input-chat-msg').onkeypress = (e) => { if(e.key === 'Enter') sendChatMessage(); };
 
+// NÚT XIN VÁN MỚI
+document.getElementById('btn-new-game').onclick = function() {
+    if(!currentRoomId || myRole === 'viewer') return;
+    database.ref('rooms/' + currentRoomId).once('value', snap => {
+        const room = snap.val();
+        if(!room) return;
+        if(room.p2 && isBotAccount(room.p2)) {
+            alert("Đối thủ đã đồng ý chơi ván mới!");
+            database.ref('rooms/' + currentRoomId).update({
+                status: 'playing', turn: 'p1', moves: '', timer: 60, chats: []
+            });
+        } else {
+            if(confirm("Bạn có muốn gửi yêu cầu làm ván mới tới đối thủ?")) {
+                database.ref('rooms/' + currentRoomId + '/chats').once('value', cSnap => {
+                    let chats = cSnap.val() || [];
+                    chats.push({ sender: "Hệ thống", msg: `👉 ${myUsername} muốn xin chơi Ván Mới.` });
+                    database.ref('rooms/' + currentRoomId + '/chats').set(chats);
+                });
+            }
+        }
+    });
+};
+
 function sendChatMessage() {
     const input = document.getElementById('input-chat-msg');
     const text = input.value.trim();
@@ -497,29 +542,6 @@ document.querySelectorAll('.emoji-btn').forEach(btn => {
     };
 });
 
-// NÚT XIN VÁN MỚI
-document.getElementById('btn-new-game').onclick = function() {
-    if(!currentRoomId || myRole === 'viewer') return;
-    database.ref('rooms/' + currentRoomId).once('value', snap => {
-        const room = snap.val();
-        if(!room) return;
-        if(room.p2 && (room.p2.startsWith('botAI_') || room.p2.startsWith('NgườiChơi_'))) {
-            alert("Đối thủ đã đồng ý chơi ván mới!");
-            database.ref('rooms/' + currentRoomId).update({
-                status: 'playing', turn: 'p1', moves: '', timer: 60, chats: []
-            });
-        } else {
-            if(confirm("Bạn có muốn gửi yêu cầu làm ván mới tới đối thủ?")) {
-                database.ref('rooms/' + currentRoomId + '/chats').once('value', cSnap => {
-                    let chats = cSnap.val() || [];
-                    chats.push({ sender: "Hệ thống", msg: `👉 ${myUsername} muốn xin chơi Ván Mới.` });
-                    database.ref('rooms/' + currentRoomId + '/chats').set(chats);
-                });
-            }
-        }
-    });
-};
-
 // NÚT THOÁT PHÒNG KHỎI PHÒNG GAME VỀ SẢNH
 document.getElementById('btn-leave-room').onclick = function() {
     if(!currentRoomId) return;
@@ -532,17 +554,15 @@ document.getElementById('btn-leave-room').onclick = function() {
         database.ref('rooms/' + currentRoomId).once('value', snap => {
             const room = snap.val();
             if(room) {
-                // Thoát phòng gặp Bot giả lập hoặc phòng không người khác, tiến hành bốc hơi phòng ngay lập tức
-                if(room.p2 && room.p2.startsWith('NgườiChơi_')) {
+                // Thoát ván khi đang đấu với Bot giả lập người thật => xóa phòng lập tức để làm sạch sảnh
+                if(room.p2 && isBotAccount(room.p2)) {
                     database.ref('rooms/' + currentRoomId).remove();
                 } else if(room.p1 === myUsername && (!room.p2 || room.p2 === '')) {
                     database.ref('rooms/' + currentRoomId).remove();
                 } else if(room.p1 === myUsername) {
-                    database.ref('rooms/' + currentRoomId + '/p1').set('');
-                    database.ref('rooms/' + currentRoomId + '/status').set('ended');
+                    database.ref('rooms/' + currentRoomId).remove(); // Nếu đấu người thật mà mình thoát cũng dọn phòng rỗng
                 } else if(room.p2 === myUsername) {
-                    database.ref('rooms/' + currentRoomId + '/p2').set('');
-                    database.ref('rooms/' + currentRoomId + '/status').set('ended');
+                    database.ref('rooms/' + currentRoomId).remove();
                 }
             }
         });
@@ -554,7 +574,7 @@ document.getElementById('btn-leave-room').onclick = function() {
     screenLobby.classList.add('active');
 };
 
-// ĐIỀU KHIỂN HỘP THOẠI POPUP THÔNG BÁO CHUNG
+// DIỀU KHIỂN HỘP THOẠI POPUP THÔNG BÁO CHUNG
 function showModal(title, text) {
     document.getElementById('modal-title').innerText = title;
     document.getElementById('modal-text').innerText = text;

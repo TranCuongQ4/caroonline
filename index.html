@@ -9,14 +9,17 @@
 <body>
 
     <div class="app-container">
-        <!-- HEADER TOP -->
         <header class="app-header">
             <h1>Caro Online Xin Chào</h1>
         </header>
 
-        <!-- MÀN HÌNH SẢNH CHỜ (LOBBY) -->
         <div id="screen-lobby" class="screen active">
             <div class="lobby-controls">
+                <div class="profile-group" style="display: flex; align-items: center; justify-content: space-between; background: #22222a; padding: 8px 12px; margin-bottom: 8px; border-radius: 4px; border: 1px solid #2a2a35;">
+                    <div style="font-size: 13px; color: #aaa;">Tên của bạn: <span id="display-my-username" style="color: #00e5ff; font-weight: bold;">...</span></div>
+                    <button id="btn-change-username" class="btn btn-secondary" style="padding: 4px 10px; font-size: 11px; margin: 0;">Đổi Tên</button>
+                </div>
+
                 <div class="input-group">
                     <input type="password" id="input-room-pass" placeholder="Mật mã phòng (Để trống nếu mở)">
                 </div>
@@ -28,63 +31,56 @@
 
             <div class="lobby-title">Danh Sách Phòng Đang Diễn Ra</div>
             <div id="room-list" class="room-list-grid">
-                <!-- Danh sách phòng hiển thị ở đây -->
-            </div>
+                </div>
         </div>
 
-        <!-- MÀN HÌNH TRONG PHÒNG GAME -->
         <div id="screen-game" class="screen">
-            <div class="game-header">
-                <span id="display-room-name">Phòng: --</span>
-                <span id="game-timer">60s</span>
+            <div class="game-header-bar">
+                <button id="btn-leave-room" class="btn-back">⬅ Sảnh</button>
+                <div id="display-room-name" class="room-title-text">Phòng: --</div>
+                <button id="btn-new-game" class="btn-action">Ván Mới</button>
             </div>
 
-            <div class="players-info">
+            <div class="players-status-container">
                 <div id="player1-box" class="player-card">
-                    <span class="p-icon p-white"></span>
-                    <span id="p1-name" class="p-name">Đang đợi...</span>
+                    <div class="role-badge white-badge">X</div>
+                    <div id="p1-name" class="p-name">Đang chờ...</div>
                 </div>
-                <div class="vs-text">VS</div>
+                <div class="vs-timer-box">
+                    <div class="vs-text">VS</div>
+                    <div id="game-timer" class="timer-countdown">60s</div>
+                </div>
                 <div id="player2-box" class="player-card">
-                    <span class="p-icon p-black"></span>
-                    <span id="p2-name" class="p-name">Đang đợi...</span>
+                    <div class="role-badge black-badge">O</div>
+                    <div id="p2-name" class="p-name">Đang chờ...</div>
                 </div>
             </div>
 
-            <!-- KHU VỰC BÀN CỜ VÔ HẠN (KÉO RÊ ĐƯỢC) -->
-            <div class="board-wrapper" id="board-wrapper">
-                <div class="board-canvas" id="board-canvas">
-                    <!-- Các ô cờ và quân cờ render bằng JS -->
-                </div>
+            <div id="board-wrapper" class="board-wrapper">
+                <div id="board-canvas" class="board-canvas"></div>
             </div>
 
-            <!-- HÀNG NÚT CHỨC NĂNG TRONG TRẬN -->
-            <div class="game-controls">
-                <button id="btn-confirm-move" class="btn btn-success" disabled>Xác Nhận</button>
-                <button id="btn-new-game" class="btn btn-warning">Ván Mới</button>
-                <button id="btn-leave-room" class="btn btn-danger">Thoát</button>
-            </div>
-
-            <!-- KHU VỰC CHAT CHUYÊN NGHIỆP (ẨN VỚI NGƯỜI XEM) -->
-            <div id="chat-container" class="chat-container">
-                <div id="chat-messages" class="chat-messages"></div>
-                <div class="emoji-row">
-                    <span class="emoji-btn">😂</span>
-                    <span class="emoji-btn">😎</span>
-                    <span class="emoji-btn">🤔</span>
-                    <span class="emoji-btn">🔥</span>
-                    <span class="emoji-btn">👍</span>
-                    <span class="emoji-btn">🙏</span>
-                    <span class="emoji-btn">😭</span>
-                </div>
-                <div class="chat-input-row">
-                    <input type="text" id="input-chat-msg" placeholder="Nhập tin nhắn...">
-                    <button id="btn-send-chat">Gửi</button>
+            <div class="game-footer-controls">
+                <button id="btn-confirm-move" class="btn-confirm" disabled>ĐẶT QUÂN XÁC NHẬN</button>
+                
+                <div id="chat-container" class="chat-container">
+                    <div id="chat-messages" class="chat-messages"></div>
+                    <div class="emoji-row">
+                        <span class="emoji-btn">😀</span>
+                        <span class="emoji-btn">🤣</span>
+                        <span class="emoji-btn">🔥</span>
+                        <span class="emoji-btn">👍</span>
+                        <span class="emoji-btn">🙏</span>
+                        <span class="emoji-btn">😭</span>
+                    </div>
+                    <div class="chat-input-row">
+                        <input type="text" id="input-chat-msg" placeholder="Nhập tin nhắn...">
+                        <button id="btn-send-chat">Gửi</button>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- POPUP HƯỚNG DẪN / THÔNG BÁO -->
         <div id="modal-overlay" class="modal-overlay">
             <div class="modal-content">
                 <h3 id="modal-title">Hướng Dẫn</h3>
@@ -95,17 +91,13 @@
             </div>
         </div>
 
-        <!-- FOOTER BẮT BUỘC -->
         <footer class="app-footer">
             Thiết Kế Trần Cường - Zalo: 0907860662
         </footer>
     </div>
 
-    <!-- Tích hợp các SDK Firebase bản Web thuần dạng Module/Compat -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-    
-    <!-- Nhập các file xử lý logic của hệ thống -->
     <script src="bot.js"></script>
     <script src="app.js"></script>
 </body>
