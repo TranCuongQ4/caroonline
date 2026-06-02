@@ -4,26 +4,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Caro Online</title>
+    <link rel="icon" href="data:,">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
     <div class="app-container">
-        <!-- HEADER TOP -->
         <header class="app-header">
             <h1>Caro Online Xin Chào</h1>
         </header>
 
-        <!-- MÀN HÌNH SẢNH CHỜ (LOBBY) -->
-        <div id="screen-lobby" class="screen active">
-            <div class="lobby-controls">
-                <!-- KHU VỰC HIỂN THỊ VÀ ĐỔI TÊN NGƯỜI CHƠI -->
-                <div class="profile-group" style="display: flex; align-items: center; justify-content: space-between; background: #22222a; padding: 8px 12px; margin-bottom: 8px; border-radius: 4px; border: 1px solid #2a2a35;">
-                    <div style="font-size: 13px; color: #aaa;">Tên của bạn: <span id="display-my-username" style="color: #00e5ff; font-weight: bold;">...</span></div>
-                    <button id="btn-change-username" class="btn btn-secondary" style="padding: 4px 10px; font-size: 11px; margin: 0;">Đổi Tên</button>
+        <div id=\"screen-lobby\" class=\"screen active\">
+            <div class=\"lobby-controls\">
+                <div class=\"profile-group\" style=\"display: flex; align-items: center; justify-content: space-between; background: #22222a; padding: 8px 12px; margin-bottom: 8px; border-radius: 4px; border: 1px solid #2a2a35;\">
+                    <div style=\"font-size: 13px; color: #aaa;\">Tên của bạn: <span id=\"display-my-username\" style=\"color: #00e5ff; font-weight: bold;\">...</span></div>
+                    <button id=\"btn-change-username\" class=\"btn btn-secondary\" style=\"padding: 4px 10px; font-size: 11px; margin: 0;\">Đổi Tên</button>
                 </div>
 
-                <div class="input-group">
+                <div class=\"input-group\">
                     <input type="password" id="input-room-pass" placeholder="Mật mã phòng (Để trống nếu mở)">
                 </div>
                 <div class="btn-group">
@@ -34,45 +32,41 @@
 
             <div class="lobby-title">Danh Sách Phòng Đang Diễn Ra</div>
             <div id="room-list" class="room-list-grid">
-                <!-- Danh sách phòng hiển thị ở đây -->
-            </div>
+                </div>
         </div>
 
-        <!-- MÀN HÌNH TRONG PHÒNG GAME -->
         <div id="screen-game" class="screen">
-            <div class="game-header-bar" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                <button id="btn-leave-room" class="btn btn-secondary" style="padding: 6px 12px; font-size: 12px; margin: 0;">⬅ Sảnh</button>
-                <div id="display-room-name" class="room-title-text" style="font-weight: bold; color: #00e5ff;">Phòng: --</div>
-                <button id="btn-new-game" class="btn btn-primary" style="padding: 6px 12px; font-size: 12px; margin: 0;">Ván Mới</button>
+            <div class="game-header-bar">
+                <button id="btn-leave-room" class="btn btn-danger">Thoát</button>
+                <div id="display-room-name" class="room-indicator">Phòng: --</div>
+                <button id="btn-new-game" class="btn btn-success">Ván Mới</button>
             </div>
 
-            <!-- THÔNG TIN HAI BÊN BÀN CỜ -->
-            <div class="players-info">
-                <div id="player1-box" class="player-card">
-                    <div class="piece white" style="width: 15px; height: 15px; margin-right: 5px;"></div>
-                    <div id="p1-name" class="p-name">Đang chờ...</div>
+            <div class="players-status-container">
+                <div id="player1-box" class="player-status-card">
+                    <div class="role-badge white-badge">O</div>
+                    <div id="p1-name" class="player-username">Đang chờ...</div>
                 </div>
-                <div class="vs-timer-box" style="text-align: center;">
+                <div class="vs-timer-center">
                     <div class="vs-text">VS</div>
-                    <div id="game-timer" style="color: #ff1744; font-weight: bold; font-size: 13px;">60s</div>
+                    <div id="game-timer" class="countdown-timer">60s</div>
                 </div>
-                <div id="player2-box" class="player-card" style="justify-content: flex-end;">
-                    <div id="p2-name" class="p-name" style="text-align: right; margin-right: 5px;">Đang chờ...</div>
-                    <div class="piece black" style="width: 15px; height: 15px;"></div>
+                <div id="player2-box" class="player-status-card">
+                    <div class="role-badge black-badge">X</div>
+                    <div id="p2-name" class="player-username">Đang chờ...</div>
                 </div>
             </div>
 
-            <!-- KHU VỰC BÀN CỜ CARO -->
             <div id="board-wrapper" class="board-wrapper">
-                <div id="board-canvas" class="board-canvas"></div>
+                <div id="board-canvas" class="board-canvas">
+                    </div>
             </div>
 
-            <!-- KHU VỰC ĐẶT QUÂN VÀ CHAT -->
-            <div class="game-footer-controls" style="margin-top: 8px; display: flex; flex-direction: column; gap: 8px;">
-                <button id="btn-confirm-move" class="btn btn-warning" style="width: 100%; padding: 10px; font-size: 14px; margin: 0;" disabled>ĐẶT QUÂN XÁC NHẬN</button>
+            <div class="game-footer-controls">
+                <button id="btn-confirm-move" class="btn-action-confirm" disabled>XÁC NHẬN NƯỚC ĐI</button>
                 
-                <div id="chat-container" class="chat-container">
-                    <div id="chat-messages" class="chat-messages"></div>
+                <div id="chat-container" class="chat-system-box">
+                    <div id="chat-messages" class="chat-logs-wrapper"></div>
                     <div class="emoji-row">
                         <span class="emoji-btn">😀</span>
                         <span class="emoji-btn">🤣</span>
@@ -89,26 +83,24 @@
             </div>
         </div>
 
-        <!-- POPUP HƯỚNG DẪN / THÔNG BÁO -->
         <div id="modal-overlay" class="modal-overlay">
             <div class="modal-content">
                 <h3 id="modal-title">Hướng Dẫn</h3>
-                <p id="modal-text" style="white-space: pre-line; text-align: left; font-size: 12px; max-height: 200px; overflow-y: auto; margin-bottom: 15px; color: #ccc;"></p>
+                <p id="modal-text"></p>
                 <div id="modal-buttons" class="modal-buttons">
-                    <button id="btn-modal-close" class="btn btn-primary" style="width: 100%;">Đóng</button>
+                    <button id="btn-modal-close" class="btn btn-primary">Đóng</button>
                 </div>
             </div>
         </div>
 
-        <!-- FOOTER -->
         <footer class="app-footer">
             Thiết Kế Trần Cường - Zalo: 0907860662
         </footer>
     </div>
 
-    <!-- Tích hợp SDK và các file logic -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
     <script src="huongdan.js"></script>
     <script src="bot.js"></script>
     <script src="app.js"></script>
