@@ -1,4 +1,4 @@
-// KHO TÊN THUẦN VIỆT 100% HOÀN TOÀN TỰ NHIÊN (XÓA SẠCH MỌI TIỀN TỐ botAI_ HOẶC SỐ ĐUÔI)
+// KHO TÊN THUẦN VIỆT 100% HOÀN TOÀN TỰ NHIÊN GIỐNG NGƯỜI CHƠI THẬT
 const FIRST_NAMES = ["Nguyễn ", "Trần ", "Lê ", "Phạm ", "Hoàng ", "Huỳnh ", "Phan ", "Vũ ", "Đặng ", "Bùi ", "Ngô ", "Dương ", "Lý "];
 const MIDDLE_AND_LAST_NAMES = [
     "Thành Danh", "Minh Quân", "Tuấn Anh", "Khánh Linh", "Bảo Thy", "Hoàng Long", 
@@ -8,7 +8,7 @@ const MIDDLE_AND_LAST_NAMES = [
     "Hoàng Yến", "Minh Triết", "Quang Huy", "Thanh Trúc", "Đăng Khoa", "Tuyết Mai"
 ];
 
-// Mảng đệm chứa danh sách tên để hệ thống app.js đối chiếu ngầm khi xử lý AI
+// Mảng đệm chứa danh sách tên sạch để đối chiếu
 const ALL_PURE_VIET_NAMES = [];
 (function generateAllBotNamesCache() {
     FIRST_NAMES.forEach(f => {
@@ -22,7 +22,7 @@ function getRandomPureVietName() {
     return ALL_PURE_VIET_NAMES[Math.floor(Math.random() * ALL_PURE_VIET_NAMES.length)];
 }
 
-// TẠO TRẬN ĐẤU GIẢ CHO 7 PHÒNG ĐẦU TIÊN (BOT ĐẤU VỚI BOT MANG TÊN VIỆT HOÀN TOÀN)
+// RESET GIẢ LẬP VÀ GHI ĐÈ TRỰC TIẾP TÊN THUẦN VIỆT LÊN FIREBASE ĐỂ LÀM SẠCH RÁC CŨ
 function resetBotVersusRoom(roomIndex) {
     const b1 = getRandomPureVietName();
     const b2 = getRandomPureVietName();
@@ -40,7 +40,7 @@ function resetBotVersusRoom(roomIndex) {
     });
 }
 
-// VÒNG LẶP CHO 2 BOT TỰ CHƠI ĐỂ TẠO KHÔNG KHÍ SÔI ĐỘNG CHO WEB CỜ CARO ONLINE
+// VÒNG LẶP CHO 2 BOT TỰ CHƠI Ở CÁC PHÒNG ĐẦU TIÊN ĐỂ TẠO KHÔNG KHÍ SÔI ĐỘNG
 function runBotVersusLoop(roomId) {
     setTimeout(() => {
         if (currentRoomId !== roomId) return; 
@@ -76,10 +76,10 @@ function runBotVersusLoop(roomId) {
             }
             runBotVersusLoop(roomId);
         });
-    }, Math.floor(2000 + Math.random() * 2000)); // Thời gian hạ quân từ 2 đến 4 giây như người thật
+    }, Math.floor(2000 + Math.random() * 2000)); 
 }
 
-// BOT ĐÓNG GIẢ NGƯỜI CHƠI THẬT VÀO GHÉP PHÒNG SAU 5 GIÂY NGƯỜI DÙNG TỰ TẠO PHÒNG MÀ CHỜ LÂU
+// BOT TỰ ĐỘNG GHÉP VÀO PHÒNG KHI NGƯỜI THẬT CHỜ QUÁ 5 GIÂY NGOÀI SẢNH MÀ KHÔNG CÓ AI VÀO
 function checkAndTriggerFakePlayerBot(roomId) {
     firebase.database().ref('rooms/' + roomId).once('value', snap => {
         const room = snap.val();
@@ -95,7 +95,7 @@ function checkAndTriggerFakePlayerBot(roomId) {
     });
 }
 
-// KÍCH HOẠT ĐI QUÂN CỦA BOT KHI ĐANG ĐẤU VỚI NGƯỜI CHƠI THẬT
+// ĐI QUÂN CỦA BOT KHI ĐANG THI ĐẤU TRỰC TIẾP VỚI NGƯỜI CHƠI THẬT
 function triggerBotAIMove(roomId, movesArr) {
     const delay = Math.floor(1500 + Math.random() * 1500); 
     setTimeout(() => {
@@ -123,7 +123,7 @@ function triggerBotAIMove(roomId, movesArr) {
     }, delay);
 }
 
-// THUẬT TOÁN AI CHẤM ĐIỂM ĐI QUÂN NÂNG CAO
+// THUẬT TOÁN AI CHẤM ĐIỂM ĐI QUÂN MINIMAX
 function computeAdvancedAIMinimax(movesArr, botRole) {
     const grid = {};
     const enemyRole = (botRole === 'p1') ? 'p2' : 'p1';
@@ -176,7 +176,7 @@ function computeAdvancedAIMinimax(movesArr, botRole) {
     return bestMove;
 }
 
-// ĐÁNH GIÁ ĐIỂM THẾ CỜ ĐỂ BOT TẤN CÔNG HOẶC PHÒNG THỦ ĐIÊU LUYỆN
+// ĐÁNH GIÁ THẾ CỜ CHO AI ĐI QUÂN KHÔN NGOAN
 function evaluateCellForRole(r, c, role, grid) {
     const directions = [[0,1], [1,0], [1,1], [1,-1]];
     let totalScore = 0;
