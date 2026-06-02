@@ -19,6 +19,7 @@ let currentRoomId = null;
 let myRole = null; // 'p1' (Trắng), 'p2' (Đen), hoặc 'viewer' (Người xem)
 let selectedPreviewMove = null; // Nước đi nhấp thử nhưng chưa bấm xác nhận
 let gameCountdownInterval = null;
+let botMatchmakerTimeout = null; // Vòng hẹn giờ gọi Bot giả lập người chơi
 const BOARD_SIZE = 80; // Bản cờ ảo 80x80 ô để cuộn thoải mái
 
 // Các phần tử DOM cần tương tác
@@ -95,12 +96,11 @@ function initLobbySystem() {
         roomListContainer.innerHTML = '';
         const allRooms = snapshot.val() || {};
         
-        // Luôn hiển thị danh sách từ phòng 1 trở đi sắp xếp chuyên nghiệp
         let index = 1;
         while(true) {
             let roomId = 'room_' + index;
             if (index > 3 && !allRooms[roomId]) {
-                break; // Hết danh sách phòng tùy biến của người dùng
+                break; 
             }
             const room = allRooms[roomId] || { status: 'empty' };
             renderRoomCard(roomId, index, room);
@@ -172,7 +172,6 @@ function renderRoomCard(roomId, displayIndex, room) {
 
     card.onclick = () => {
         if(displayIndex <= 3) {
-            // Vào xem trận Bot đấu với Bot
             joinGameRoom(roomId, true);
         } else {
             if(room.pass) {
@@ -195,7 +194,6 @@ function joinGameRoom(roomId, isForcedViewer = false) {
     screenGame.classList.add('active');
     document.getElementById('display-room-name').innerText = "Phòng: " + roomId.replace("room_","");
     
-    // Cuộn bàn cờ về vị trí trung tâm để người chơi dễ quan sát ngay lập tức
     boardWrapper.scrollLeft = (BOARD_SIZE * 25 / 2) - 150;
     boardWrapper.scrollTop = (BOARD_SIZE * 25 / 2) - 100;
 
@@ -203,14 +201,23 @@ function joinGameRoom(roomId, isForcedViewer = false) {
         const room = snapshot.val();
         if(isForcedViewer) {
             myRole = 'viewer';
-            // Bấm vào xem 3 phòng đầu tiên thì kích hoạt luôn luồng đánh tự động của Bot
             const idx = roomId.replace('room_', '');
             if(parseInt(idx) <= 3) {
                 runBotVersusLoop(roomId);
             }
         } else {
-            if(room.p1 === myUsername) { myRole = 'p1'; }
-            else if(!room.p2 || room.p2 === '') {
+            if(room.p1 === myUsername) { 
+                myRole = 'p1'; 
+                
+                // HỆ THỐNG GỌI BOT ĐÓNG GIẢ NGƯỜI CHƠI SAU 5 GIÂY (NẾU KHÔNG CÓ MẬT KHẨU)
+                if(!room.pass || room.pass === "") {
+                    if(botMatchmakerTimeout) clearTimeout(botMatchmakerTimeout);
+                    botMatchmakerTimeout = setTimeout(() => {
+                        checkAndTriggerFakePlayerBot(roomId);
+                    }, 5000); // Đợi đúng 5 giây như anh yêu cầu
+                }
+
+            } else if(!room.p2 || room.p2 === '') {
                 myRole = 'p2';
                 database.ref('rooms/' + roomId + '/p2').set(myUsername);
                 database.ref('rooms/' + roomId + '/status').set('playing');
@@ -219,18 +226,16 @@ function joinGameRoom(roomId, isForcedViewer = false) {
             }
         }
 
-        // Cấu hình ẩn/hiện và trạng thái các nút bấm dựa vào quyền Viewer hay Người chơi
         if(myRole === 'viewer') {
             document.getElementById('chat-container').style.display = 'none';
-            document.getElementById('btn-confirm-move').style.display = 'none'; // Ẩn nút xác nhận
-            document.getElementById('btn-new-game').disabled = true; // Khóa nút Ván mới
+            document.getElementById('btn-confirm-move').style.display = 'none';
+            document.getElementById('btn-new-game').disabled = true;
         } else {
             document.getElementById('chat-container').style.display = 'flex';
-            document.getElementById('btn-confirm-move').style.display = 'block'; // Hiện nút xác nhận
+            document.getElementById('btn-confirm-move').style.display = 'block';
             document.getElementById('btn-new-game').disabled = false;
         }
         
-        // Kích hoạt lắng nghe dữ liệu từ Firebase về phòng này
         listenToRoomUpdates(roomId);
     });
 }
@@ -240,7 +245,6 @@ function listenToRoomUpdates(roomId) {
         const room = snapshot.val();
         if(!room) return;
 
-        // Cập nhật giao diện thông tin người chơi
         document.getElementById('p1-name').innerText = room.p1 || 'Đang chờ...';
         document.getElementById('p2-name').innerText = room.p2 || 'Đang chờ...';
         
@@ -249,8 +253,6 @@ function listenToRoomUpdates(roomId) {
 
         document.getElementById('game-timer').innerText = (room.timer || 60) + 's';
 
-        // Render toàn bộ quân cờ thực tế lên bàn cờ
-        // Xóa sạch các quân cũ trước khi nạp dữ liệu mới
         document.querySelectorAll('.board-canvas .piece').forEach(p => p.remove());
         const movesArr = room.moves ? room.moves.split(';') : [];
         movesArr.forEach(mStr => {
@@ -259,33 +261,28 @@ function listenToRoomUpdates(roomId) {
             drawPieceOnBoard(parseInt(r), parseInt(c), role, false);
         });
 
-        // Nếu có nước đi nhấp thử hiện tại, hãy vẽ nó lên màn hình
         if(selectedPreviewMove) {
             drawPieceOnBoard(selectedPreviewMove.r, selectedPreviewMove.c, myRole, true);
         }
 
-        // Quản lý trạng thái vô hiệu hóa nút bấm xác nhận
         if(myRole !== 'viewer' && room.turn === myRole && room.status === 'playing') {
             btnConfirmMove.disabled = (selectedPreviewMove === null);
         } else {
             btnConfirmMove.disabled = true;
         }
 
-        // KÍCH HOẠT ĐỒNG HỒ ĐẾM NGƯỢC NỘI BỘ CHO NGƯỜI CHỦ PHÒNG (P1) ĐỂ ĐỒNG BỘ LÊN CLOUD
         if(myRole === 'p1') {
             startLocalCountdown(room);
         }
 
-        // ĐỐI ĐẦU VỚI BOT: Nếu đến lượt Bot và là phòng tự tạo mở, Bot sẽ tính nước đi
-        if(room.status === 'playing' && room.turn === 'p2' && room.p2 && room.p2.startsWith('botAI_')) {
-            // Chỉ chạy xử lý Bot nếu người tính toán là máy chủ kiểm soát phòng
+        // ĐỐI ĐẦU VỚI BOT (CẢ PHÒNG CHIM MỒI HOẶC BOT ĐÓNG GIẢ NGƯỜI CHƠI THẬT)
+        if(room.status === 'playing' && room.turn === 'p2' && room.p2 && (room.p2.startsWith('botAI_') || room.p2.startsWith('NgườiChơi_'))) {
             if(myRole === 'p1') {
                 triggerBotAIMove(roomId, movesArr);
             }
         }
     });
 
-    // Lắng nghe dữ liệu Chat trong phòng
     database.ref('rooms/' + roomId + '/chats').on('value', snap => {
         if(myRole === 'viewer') return;
         const chatBox = document.getElementById('chat-messages');
@@ -312,7 +309,6 @@ function startLocalCountdown(room) {
         currentSeconds--;
         if(currentSeconds <= 0) {
             clearInterval(gameCountdownInterval);
-            // Xử lý thua cuộc do hết giờ
             const winner = (room.turn === 'p1') ? room.p2 : room.p1;
             database.ref('rooms/' + currentRoomId + '/status').set('ended');
             alert(`Hết giờ! Trận đấu kết thúc.`);
@@ -336,25 +332,20 @@ function drawPieceOnBoard(r, c, role, isPreview) {
 function handleCellClick(r, c) {
     if(!currentRoomId || myRole === 'viewer') return;
     
-    // Kiểm tra xem có đúng lượt của mình không
     database.ref('rooms/' + currentRoomId).once('value', snap => {
         const room = snap.val();
         if(room.turn !== myRole || room.status !== 'playing') return;
 
-        // Kiểm tra xem ô này đã có quân cờ thực tế nào chưa
         const movesArr = room.moves ? room.moves.split(';') : [];
         const isOccupied = movesArr.some(m => m.startsWith(`${r},${c},`));
         if(isOccupied) return;
 
         if(selectedPreviewMove && selectedPreviewMove.r === r && selectedPreviewMove.c === c) {
-            // THU HỒI: Nhấn lại chính ô đang thử để gỡ ra
             selectedPreviewMove = null;
         } else {
-            // THỬ NGHIỆM ĐẶT QUÂN CỜ VÀO Ô MỚI
             selectedPreviewMove = { r: r, c: c };
         }
         
-        // Buộc hệ thống cập nhật render lại giao diện tức thì
         database.ref('rooms/' + currentRoomId).set(room);
     });
 }
@@ -401,33 +392,21 @@ function checkWinCondition(r, c, role, movesArr) {
         grid[`${row}_${col}`] = pRole;
     });
 
-    const directions = [
-        [0, 1],   // Ngang
-        [1, 0],   // Dọc
-        [1, 1],   // Chéo xuôi
-        [1, -1]   // Chéo ngược
-    ];
+    const directions = [[0, 1], [1, 0], [1, 1], [1, -1]];
 
     for (let [dr, dc] of directions) {
         let count = 1;
         
-        // Quét tiến về một hướng
         let rForward = r + dr, cForward = c + dc;
         while (grid[`${rForward}_${cForward}`] === role) { count++; rForward += dr; cForward += dc; }
-        // Kiểm tra xem đầu tiến có bị chặn bởi quân đối phương không
         const headBlocked = grid[`${rForward}_${cForward}`] !== undefined && grid[`${rForward}_${cForward}`] !== role;
 
-        // Quét lùi về hướng ngược lại
         let rBackward = r - dr, cBackward = c - dc;
         while (grid[`${rBackward}_${cBackward}`] === role) { count++; rBackward -= dr; cBackward -= dc; }
-        // Kiểm tra xem đầu lùi có bị chặn bởi quân đối phương không
         const tailBlocked = grid[`${rBackward}_${cBackward}`] !== undefined && grid[`${rBackward}_${cBackward}`] !== role;
 
         if (count >= 5) {
-            // Đúng luật cờ Caro Việt Nam: Đủ 5 quân nhưng bị chặn cứng CẢ HAI ĐẦU thì không tính là thắng
-            if (headBlocked && tailBlocked) {
-                continue; 
-            }
+            if (headBlocked && tailBlocked) { continue; }
             return true;
         }
     }
@@ -446,7 +425,7 @@ function sendChatMessage() {
     database.ref('rooms/' + currentRoomId + '/chats').once('value', snap => {
         let chats = snap.val() || [];
         chats.push({ sender: myUsername, msg: text });
-        if(chats.length > 20) chats.shift(); // Tự động dọn dẹp giữ lại 20 dòng chat
+        if(chats.length > 20) chats.shift();
         database.ref('rooms/' + currentRoomId + '/chats').set(chats);
     });
     input.value = '';
@@ -465,19 +444,17 @@ document.querySelectorAll('.emoji-btn').forEach(btn => {
     };
 });
 
-// NÚT XIN VÁN MỚI (CHỦ ĐỘNG HỎI HOẶC TỰ ĐỒNG Ý NẾU ĐẤU VỚI BOT)
+// NÚT XIN VÁN MỚI
 document.getElementById('btn-new-game').onclick = function() {
     if(!currentRoomId || myRole === 'viewer') return;
     database.ref('rooms/' + currentRoomId).once('value', snap => {
         const room = snap.val();
-        if(room.p2 && room.p2.startsWith('botAI_')) {
-            // Nếu chơi với Bot, Bot tự động đồng ý ngay tức khắc
-            alert("Đối thủ (Bot) đã đồng ý chơi ván mới!");
+        if(room.p2 && (room.p2.startsWith('botAI_') || room.p2.startsWith('NgườiChơi_'))) {
+            alert("Đối thủ đã đồng ý chơi ván mới!");
             database.ref('rooms/' + currentRoomId).update({
                 status: 'playing', turn: 'p1', moves: '', timer: 60, chats: []
             });
         } else {
-            // Nếu người thật chơi với nhau
             if(confirm("Bạn có muốn gửi yêu cầu làm ván mới tới đối thủ?")) {
                 database.ref('rooms/' + currentRoomId + '/chats').once('value', cSnap => {
                     let chats = cSnap.val() || [];
@@ -493,14 +470,18 @@ document.getElementById('btn-new-game').onclick = function() {
 document.getElementById('btn-leave-room').onclick = function() {
     if(!currentRoomId) return;
     if(gameCountdownInterval) clearInterval(gameCountdownInterval);
+    if(botMatchmakerTimeout) clearTimeout(botMatchmakerTimeout); // Hủy hẹn giờ gọi Bot khi thoát
+    
     database.ref('rooms/' + currentRoomId).off();
     
     if(myRole !== 'viewer') {
         database.ref('rooms/' + currentRoomId).once('value', snap => {
             const room = snap.val();
             if(room) {
-                // Nếu phòng trống hoàn toàn hoặc là phòng người chơi tự tạo mở rộng, xóa phòng để giải phóng tài nguyên
-                if(room.p1 === myUsername && (!room.p2 || room.p2 === '')) {
+                // Nếu thoát phòng khi đang đấu với Bot giả lập, xóa phòng luôn để tránh rác hệ thống
+                if(room.p2 && room.p2.startsWith('NgườiChơi_')) {
+                    database.ref('rooms/' + currentRoomId).remove();
+                } else if(room.p1 === myUsername && (!room.p2 || room.p2 === '')) {
                     database.ref('rooms/' + currentRoomId).remove();
                 } else if(room.p1 === myUsername) {
                     database.ref('rooms/' + currentRoomId + '/p1').set('');
@@ -519,7 +500,7 @@ document.getElementById('btn-leave-room').onclick = function() {
     screenLobby.classList.add('active');
 };
 
-// ĐIỀU KHIỂN HỘP THOẠI POPUP THÔNG BÁO CHUNG
+// DIỀU KHIỂN HỘP THOẠI POPUP THÔNG BÁO CHUNG
 function showModal(title, text) {
     document.getElementById('modal-title').innerText = title;
     document.getElementById('modal-text').innerText = text;

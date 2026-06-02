@@ -1,7 +1,7 @@
 // HÀM RESET GIẢ LẬP TRẬN ĐẤU CỦA 2 BOT Ở BA PHÒNG ĐẦU TIÊN TIÊN LIÊN TỤC
 function resetBotVersusRoom(roomIndex) {
-    const b1 = "bot_" + Math.floor(100000 + Math.random() * 900000);
-    const b2 = "bot_" + Math.floor(100000 + Math.random() * 900000);
+    const b1 = "caro" + Math.floor(100000 + Math.random() * 900000);
+    const b2 = "caro" + Math.floor(100000 + Math.random() * 900000);
     const roomId = 'room_' + roomIndex;
 
     firebase.database().ref('rooms/' + roomId).set({
@@ -18,28 +18,24 @@ function resetBotVersusRoom(roomIndex) {
 
 // VÒNG LẶP CHO 2 BOT TỰ ĐẤU TRẬN GIẢ LẬP TRÊN SERVER CẢ NGÀY KHÔNG DỪNG
 function runBotVersusLoop(roomId) {
-    // Đặt thời gian Bot suy nghĩ thực tế từ 2 đến 4 giây để người xem thấy cờ chạy liên tục
     setTimeout(() => {
-        if (currentRoomId !== roomId) return; // Nếu người xem thoát phòng này rồi thì dừng luồng lặp lại để tránh tốn tài nguyên
+        if (currentRoomId !== roomId) return; 
         
         firebase.database().ref('rooms/' + roomId).once('value', snap => {
             const room = snap.val();
             if(!room || room.status !== 'playing') {
-                // Nếu trận đấu bị hủy hoặc kết thúc, reset trận mới tức thì
                 const idx = roomId.replace('room_','');
                 resetBotVersusRoom(parseInt(idx));
                 return;
             }
 
             let movesArr = room.moves ? room.moves.split(';') : [];
-            const botRole = room.turn; // 'p1' hoặc 'p2'
+            const botRole = room.turn; 
             
-            // AI tính toán nước đi giả lập
             const aiMove = computeAdvancedAIMinimax(movesArr, botRole);
             movesArr.push(`${aiMove.r},${aiMove.c},${botRole}`);
             const updatedMovesStr = movesArr.filter(Boolean).join(';');
             
-            // Kiểm tra xem nước đi này Bot có thắng luôn không
             const isWin = checkWinCondition(aiMove.r, aiMove.c, botRole, movesArr);
             
             if(isWin || movesArr.length >= 200) {
@@ -54,15 +50,32 @@ function runBotVersusLoop(roomId) {
                     timer: 60
                 });
             }
-            // Tiếp tục vòng lặp tự đánh cho ván tiếp theo
             runBotVersusLoop(roomId);
         });
     }, Math.floor(2000 + Math.random() * 2000));
 }
 
-// KÍCH HOẠT BOT KHI NGƯỜI CHƠI THẬT ĐẤU VỚI MÁY (KHI PHÒNG TRỐNG CHƯA AI VÀO)
+// HÀM KIỂM TRA VÀ TỰ ĐỘNG CHO BOT ĐÓNG GIẢ NGƯỜI CHƠI THẬT SAU 5 GIÂY ĐỢI LÂU
+function checkAndTriggerFakePlayerBot(roomId) {
+    firebase.database().ref('rooms/' + roomId).once('value', snap => {
+        const room = snap.val();
+        // Nếu phòng vẫn tồn tại, đang ở trạng thái 'waiting' và vị trí Player 2 thực sự vẫn trống
+        if(room && room.status === 'waiting' && (!room.p2 || room.p2 === '')) {
+            // Đặt tên Bot giống hệt người chơi thật để họ không phát hiện ra
+            const fakePlayerName = "NgườiChơi_" + Math.floor(100000 + Math.random() * 900000);
+            
+            firebase.database().ref('rooms/' + roomId).update({
+                p2: fakePlayerName,
+                status: 'playing',
+                timer: 60
+            });
+        }
+    });
+}
+
+// KÍCH HOẠT BOT KHI NGƯỜI CHƠI THẬT ĐẤU VỚI MÁY (KHI ĐẾN LƯỢT ĐƯỜNG ĐI CỦA BOT)
 function triggerBotAIMove(roomId, movesArr) {
-    const delay = Math.floor(2000 + Math.random() * 2000);
+    const delay = Math.floor(1500 + Math.random() * 1500); // Tốc độ phản hồi của Bot giả lập người từ 1.5s - 3s
     setTimeout(() => {
         firebase.database().ref('rooms/' + roomId).once('value', snap => {
             const room = snap.val();
@@ -99,21 +112,18 @@ function computeAdvancedAIMinimax(movesArr, botRole) {
         grid[`${r}_${c}`] = role;
     });
 
-    // Nếu bàn cờ trống rỗng, Bot hạ ngay ô trung tâm bàn cờ ảo
     if(movesArr.length === 0 || movesArr[0] === "") {
         return { r: 40, c: 40 };
     }
 
     let bestScore = -1;
     let bestMove = null;
-    const searchRange = 2; // Quét phạm vi lân cận xung quanh các quân đã hạ để tối ưu hóa hiệu năng
+    const searchRange = 2; 
 
-    // Quét tìm tất cả các ứng viên ô trống tiềm năng xung quanh các nước đi hiện tại
     for(let r = 2; r < 78; r++) {
         for(let c = 2; c < 78; c++) {
-            if(grid[`${r}_${c}`]) continue; // Ô đã có quân, bỏ qua
+            if(grid[`${r}_${c}`]) continue; 
 
-            // Chỉ tính toán nếu ô này nằm gần một quân cờ bất kỳ để tránh lãng phí CPU
             let nearPiece = false;
             for(let dr = -searchRange; dr <= searchRange; dr++) {
                 for(let dc = -searchRange; dc <= searchRange; dc++) {
@@ -124,11 +134,8 @@ function computeAdvancedAIMinimax(movesArr, botRole) {
 
             if(!nearPiece) continue;
 
-            // ĐÁNH GIÁ THẾ TRẬN: Cộng điểm tấn công và điểm phòng thủ chặn đòn đối phương
             const attackScore = evaluateCellForRole(r, c, botRole, grid);
             const defenseScore = evaluateCellForRole(r, c, enemyRole, grid);
-            
-            // Ưu tiên chặn đòn chí mạng của địch cao hơn tấn công thông thường một chút
             const finalScore = attackScore + (defenseScore * 1.1);
 
             if(finalScore > bestScore) {
@@ -138,7 +145,6 @@ function computeAdvancedAIMinimax(movesArr, botRole) {
         }
     }
 
-    // Nếu không tìm thấy nước tối ưu, hạ ngẫu nhiên sát một quân cờ bất kỳ
     if(!bestMove) {
         const firstMove = movesArr[0].split(',');
         return { r: parseInt(firstMove[0]) + 1, c: parseInt(firstMove[1]) };
@@ -156,21 +162,18 @@ function evaluateCellForRole(r, c, role, grid) {
         let count = 0;
         let openEnds = 0;
 
-        // Quét về phía trước
         let rr = r + dr, cc = c + dc;
         while(grid[`${rr}_${cc}`] === role) { count++; rr += dr; cc += dc; }
-        if(!grid[`${rr}_${cc}`]) openEnds++; // Đầu trống
+        if(!grid[`${rr}_${cc}`]) openEnds++; 
 
-        // Quét về phía sau
         rr = r - dr; cc = c - dc;
         while(grid[`${rr}_${cc}`] === role) { count++; rr -= dr; cc -= dc; }
-        if(!grid[`${rr}_${cc}`]) openEnds++; // Đuôi trống
+        if(!grid[`${rr}_${cc}`]) openEnds++; 
 
-        // BẢNG CHẤM ĐIỂM THẾ TRẬN CARO VIỆT NAM
         if(count >= 4) {
-            totalScore += (openEnds === 2) ? 10000 : 5000; // Sắp thành 5 quân liên tiếp
+            totalScore += (openEnds === 2) ? 10000 : 5000; 
         } else if(count === 3) {
-            totalScore += (openEnds === 2) ? 2000 : 500;  // Tạo thế 4 quân thoáng
+            totalScore += (openEnds === 2) ? 2000 : 500;  
         } else if(count === 2) {
             totalScore += (openEnds === 2) ? 400 : 100;
         } else if(count === 1) {
