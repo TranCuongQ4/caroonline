@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Caro Online</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="app-container">
+        <!-- HEADER TOP -->
+        <header class="app-header">
+            <h1>Caro Online Xin Chào</h1>
+        </header>
+
+        <!-- MÀN HÌNH SẢNH CHỜ (LOBBY) -->
+        <div id="screen-lobby" class="screen active">
+            <div class="lobby-controls">
+                <div class="input-group">
+                    <input type="password" id="input-room-pass" placeholder="Mật mã phòng (Để trống nếu mở)">
+                </div>
+                <div class="btn-group">
+                    <button id="btn-create-room" class="btn btn-primary">Tạo Phòng</button>
+                    <button id="btn-guide" class="btn btn-secondary">Hướng Dẫn</button>
+                </div>
+            </div>
+
+            <div class="lobby-title">Danh Sách Phòng Đang Diễn Ra</div>
+            <div id="room-list" class="room-list-grid">
+                <!-- Danh sách phòng hiển thị ở đây -->
+            </div>
+        </div>
+
+        <!-- MÀN HÌNH TRONG PHÒNG GAME -->
+        <div id="screen-game" class="screen">
+            <div class="game-header">
+                <span id="display-room-name">Phòng: --</span>
+                <span id="game-timer">60s</span>
+            </div>
+
+            <div class="players-info">
+                <div id="player1-box" class="player-card">
+                    <span class="p-icon p-white"></span>
+                    <span id="p1-name" class="p-name">Đang đợi...</span>
+                </div>
+                <div class="vs-text">VS</div>
+                <div id="player2-box" class="player-card">
+                    <span class="p-icon p-black"></span>
+                    <span id="p2-name" class="p-name">Đang đợi...</span>
+                </div>
+            </div>
+
+            <!-- KHU VỰC BÀN CỜ VÔ HẠN (KÉO RÊ ĐƯỢC) -->
+            <div class="board-wrapper" id="board-wrapper">
+                <div class="board-canvas" id="board-canvas">
+                    <!-- Các ô cờ và quân cờ render bằng JS -->
+                </div>
+            </div>
+
+            <!-- HÀNG NÚT CHỨC NĂNG TRONG TRẬN -->
+            <div class="game-controls">
+                <button id="btn-confirm-move" class="btn btn-success" disabled>Xác Nhận</button>
+                <button id="btn-new-game" class="btn btn-warning">Ván Mới</button>
+                <button id="btn-leave-room" class="btn btn-danger">Thoát</button>
+            </div>
+
+            <!-- KHU VỰC CHAT CHUYÊN NGHIỆP (ẨN VỚI NGƯỜI XEM) -->
+            <div id="chat-container" class="chat-container">
+                <div id="chat-messages" class="chat-messages"></div>
+                <div class="emoji-row">
+                    <span class="emoji-btn">😂</span>
+                    <span class="emoji-btn">😎</span>
+                    <span class="emoji-btn">🤔</span>
+                    <span class="emoji-btn">🔥</span>
+                    <span class="emoji-btn">👍</span>
+                    <span class="emoji-btn">🙏</span>
+                    <span class="emoji-btn">😭</span>
+                </div>
+                <div class="chat-input-row">
+                    <input type="text" id="input-chat-msg" placeholder="Nhập tin nhắn...">
+                    <button id="btn-send-chat">Gửi</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- POPUP HƯỚNG DẪN / THÔNG BÁO -->
+        <div id="modal-overlay" class="modal-overlay">
+            <div class="modal-content">
+                <h3 id="modal-title">Hướng Dẫn</h3>
+                <p id="modal-text"></p>
+                <div id="modal-buttons" class="modal-buttons">
+                    <button id="btn-modal-close" class="btn btn-primary">Đóng</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- FOOTER BẮT BUỘC -->
+        <footer class="app-footer">
+            Thiết Kế Trần Cường - Zalo: 0907860662
+        </footer>
+    </div>
+
+    <!-- Tích hợp các SDK Firebase bản Web thuần dạng Module/Compat -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    
+    <!-- Nhập các file xử lý logic của hệ thống -->
+    <script src="bot.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

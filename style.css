@@ -1,0 +1,346 @@
+/* CẤU HÌNH CHUNG & CHẶN COPPY */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+body {
+    background-color: #121214;
+    color: #ffffff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    overflow: hidden;
+}
+
+/* CONTAINER CHUẨN 375x667 */
+.app-container {
+    width: 375px;
+    height: 667px;
+    background-color: #1e1e24;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    overflow: hidden;
+}
+
+/* HEADERS & FOOTERS */
+.app-header {
+    background-color: #16161a;
+    padding: 10px;
+    text-align: center;
+    border-bottom: 1px solid #2a2a35;
+}
+
+.app-header h1 {
+    font-size: 18px;
+    color: #F0F8FF;
+    text-shadow: 0 0 8px rgba(240, 248, 255, 0.6);
+}
+
+.app-footer {
+    background-color: #16161a;
+    color: #ffd700;
+    font-size: 11px;
+    text-align: center;
+    padding: 5px;
+    border-top: 1px solid #2a2a35;
+}
+
+/* CÁC MÀN HÌNH CHUYỂN ĐỔI */
+.screen {
+    display: none;
+    flex: 1;
+    flex-direction: column;
+    padding: 10px;
+    overflow-y: auto;
+}
+
+.screen.active {
+    display: flex;
+}
+
+/* ĐỊNH DẠNG NÚT BẤM VÀ INPUT */
+.input-group input {
+    width: 100%;
+    padding: 10px;
+    background-color: #2a2a35;
+    border: 1px solid #444;
+    color: white;
+    border-radius: 5px;
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+.btn-group {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.btn {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.btn-primary { background-color: #3f51b5; color: white; }
+.btn-secondary { background-color: #555; color: white; }
+.btn-success { background-color: #4caf50; color: white; }
+.btn-warning { background-color: #ff9800; color: white; }
+.btn-danger { background-color: #f44336; color: white; }
+.btn:disabled { background-color: #333 !important; color: #777 !important; cursor: not-allowed; }
+
+/* GRID DANH SÁCH PHÒNG SẢNH CHỜ */
+.lobby-title {
+    font-size: 14px;
+    margin-bottom: 10px;
+    color: #bbb;
+    border-left: 3px solid #3f51b5;
+    padding-left: 5px;
+}
+
+.room-list-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    overflow-y: auto;
+    flex: 1;
+    padding-bottom: 10px;
+}
+
+.room-card {
+    background-color: #25252d;
+    border: 1px solid #3a3a45;
+    border-radius: 8px;
+    padding: 8px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    cursor: pointer;
+}
+
+.room-icon {
+    width: 40px;
+    height: 40px;
+    background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%233f51b5"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>') no-repeat center;
+    background-size: contain;
+    margin-bottom: 5px;
+}
+
+.room-card.is-bot .room-icon {
+    background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%234caf50"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>') no-repeat center;
+    background-size: contain;
+}
+
+.room-name { font-size: 12px; font-weight: bold; }
+.room-status { font-size: 10px; color: #aaa; margin-top: 3px; }
+.room-lock { position: absolute; top: 3px; right: 3px; font-size: 10px; }
+
+/* GIAO DIỆN PHÒNG CHƠI GAME */
+.game-header {
+    display: flex;
+    justify-content: space-between;
+    font-weight: bold;
+    color: #00e5ff;
+    margin-bottom: 5px;
+}
+
+#game-timer {
+    color: #ff1744;
+}
+
+.players-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #16161a;
+    padding: 6px;
+    border-radius: 6px;
+    margin-bottom: 8px;
+}
+
+.player-card {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    flex: 1;
+}
+
+.player-card.active-turn {
+    border: 1px solid #00e5ff;
+    box-shadow: 0 0 5px #00e5ff;
+    border-radius: 4px;
+    padding: 2px;
+}
+
+.p-name { font-size: 11px; max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.vs-text { font-size: 12px; color: #777; padding: 0 5px; }
+
+/* KHU VỰC BÀN CỜ VÔ HẠN */
+.board-wrapper {
+    width: 100%;
+    height: 250px;
+    background-color: #111;
+    overflow: auto;
+    border: 2px solid #3a3a45;
+    position: relative;
+    cursor: grab;
+}
+
+.board-wrapper:active { cursor: grabbing; }
+
+.board-canvas {
+    width: 2000px;
+    height: 2000px;
+    position: relative;
+    /* Hiệu ứng mô phỏng vân gỗ và đường kẻ ô đen */
+    background-color: #8B5A2B;
+    background-image: 
+        linear-gradient(rgba(0, 0, 0, 0.15) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 0, 0, 0.15) 1px, transparent 1px),
+        linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)),
+        repeating-linear-gradient(45deg, rgba(160,82,45,0.2) 0px, rgba(160,82,45,0.2) 2px, transparent 2px, transparent 10px);
+    background-size: 25px 25px, 25px 25px, auto, auto;
+}
+
+/* ĐỊNH DẠNG QUÂN CỜ 3D */
+.cell {
+    position: absolute;
+    width: 25px;
+    height: 25px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.piece {
+    width: 21px;
+    height: 21px;
+    border-radius: 50%;
+    transition: all 0.1s ease;
+}
+
+/* Quân Trắng 3D nổi khối */
+.piece.white {
+    background: radial-gradient(circle at 30% 30%, #ffffff 0%, #e0e0e0 60%, #999999 100%);
+    box-shadow: inset -2px -2px 4px #777, 2px 2px 4px rgba(0,0,0,0.6);
+}
+
+/* Quân Đen 3D nổi khối */
+.piece.black {
+    background: radial-gradient(circle at 30% 30%, #555555 0%, #1a1a1a 60%, #000000 100%);
+    box-shadow: inset -2px -2px 4px #000, inset 1px 1px 2px #888, 2px 2px 4px rgba(0,0,0,0.8);
+}
+
+/* Quân đặt thử (Mờ) */
+.piece.preview {
+    opacity: 0.5;
+    animation: pulse 1s infinite alternate;
+}
+
+@keyframes pulse { from { opacity: 0.3; } to { opacity: 0.7; } }
+
+.game-controls {
+    display: flex;
+    gap: 5px;
+    margin: 8px 0;
+}
+
+.game-controls .btn { padding: 8px; font-size: 12px; }
+
+/* KHU VỰC CHAT CHUYÊN NGHIỆP */
+.chat-container {
+    background-color: #16161a;
+    border: 1px solid #2a2a35;
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 120px;
+    max-height: 150px;
+}
+
+.chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 6px;
+    font-size: 12px;
+}
+
+.chat-line { margin-bottom: 4px; word-break: break-all; }
+.chat-user { color: #00e5ff; font-weight: bold; }
+.chat-text { color: #fff; }
+
+.emoji-row {
+    display: flex;
+    justify-content: space-around;
+    background-color: #22222a;
+    padding: 3px 0;
+    border-top: 1px solid #2a2a35;
+}
+
+.emoji-btn { cursor: pointer; font-size: 16px; padding: 0 4px; }
+.emoji-btn:hover { transform: scale(1.2); }
+
+.chat-input-row {
+    display: flex;
+    border-top: 1px solid #2a2a35;
+}
+
+.chat-input-row input {
+    flex: 1;
+    padding: 6px;
+    background: transparent;
+    border: none;
+    color: white;
+    font-size: 12px;
+    outline: none;
+}
+
+.chat-input-row button {
+    background-color: #3f51b5;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+/* MODAL / POPUP THÔNG BÁO */
+.modal-overlay {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.75);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 999;
+}
+
+.modal-overlay.active { display: flex; }
+
+.modal-content {
+    background-color: #25252d;
+    width: 290px;
+    padding: 20px;
+    border-radius: 8px;
+    text-align: center;
+    border: 1px solid #444;
+}
+
+.modal-content h3 { margin-bottom: 10px; color: #00e5ff; }
+.modal-content p { font-size: 13px; color: #ccc; margin-bottom: 15px; line-height: 1.4; }
+.modal-buttons { display: flex; gap: 10px; }
