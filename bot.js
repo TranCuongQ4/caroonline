@@ -1,7 +1,19 @@
-// HÀM RESET GIẢ LẬP TRẬN ĐẤU CỦA 2 BOT Ở BA PHÒNG ĐẦU TIÊN TIÊN LIÊN TỤC
+// DANH SÁCH TÊN KHÁCH HÀNG GIẢ LẬP ĐỂ CÁC BOT ĐẤU VỚI NHAU KHÔNG BỊ TRÙNG LẶP, CỰC KỲ THẬT
+const FAKE_BOT_NAMES = [
+    "Khánh_Linh", "Minh_Quân", "Tuấn_Anh", "Bảo_Thy", "Hoàng_Long", "Thùy_Dương", 
+    "Hải_Đăng", "Phương_Thảo", "Quốc_Cường", "Thành_Đạt", "Ánh_Tuyết", "Đức_Phúc", 
+    "Hồng_Nhung", "Tiến_Dũng", "Kim_Oanh", "Văn_Nam", "Thu_Trang", "Gia_Bảo"
+];
+
+function getRandomBotName() {
+    const randomName = FAKE_BOT_NAMES[Math.floor(Math.random() * FAKE_BOT_NAMES.length)];
+    return randomName + "_" + Math.floor(10 + Math.random() * 90);
+}
+
+// HÀM RESET GIẢ LẬP TRẬN ĐẤU CỦA 2 BOT Ở 7 PHÒNG ĐẦU TIÊN LIÊN TỤC
 function resetBotVersusRoom(roomIndex) {
-    const b1 = "caro" + Math.floor(100000 + Math.random() * 900000);
-    const b2 = "caro" + Math.floor(100000 + Math.random() * 900000);
+    const b1 = "botAI_" + getRandomBotName();
+    const b2 = "botAI_" + getRandomBotName();
     const roomId = 'room_' + roomIndex;
 
     firebase.database().ref('rooms/' + roomId).set({
@@ -16,8 +28,9 @@ function resetBotVersusRoom(roomIndex) {
     });
 }
 
-// VÒNG LẶP CHO 2 BOT TỰ ĐẤU TRẬN GIẢ LẬP TRÊN SERVER CẢ NGÀY KHÔNG DỪNG
+// VÒNG LẶP CHO 2 BOT TỰ ĐẤU TRẬN GIẢ LẬP ĐỐI KHÁNG GAY GẮT TRÊN SERVER
 function runBotVersusLoop(roomId) {
+    // Đặt thời gian Bot suy nghĩ thực tế từ 1.8 đến 3.5 giây để cờ chạy dồn dập
     setTimeout(() => {
         if (currentRoomId !== roomId) return; 
         
@@ -32,13 +45,14 @@ function runBotVersusLoop(roomId) {
             let movesArr = room.moves ? room.moves.split(';') : [];
             const botRole = room.turn; 
             
+            // AI phân tích chiến thuật tấn công và chặn đòn chí mạng lẫn nhau
             const aiMove = computeAdvancedAIMinimax(movesArr, botRole);
             movesArr.push(`${aiMove.r},${aiMove.c},${botRole}`);
             const updatedMovesStr = movesArr.filter(Boolean).join(';');
             
             const isWin = checkWinCondition(aiMove.r, aiMove.c, botRole, movesArr);
             
-            if(isWin || movesArr.length >= 200) {
+            if(isWin || movesArr.length >= 250) { // Đủ nước cờ kết thúc ván hoặc hòa ván lớn
                 firebase.database().ref('rooms/' + roomId).update({
                     moves: updatedMovesStr,
                     status: 'ended'
@@ -52,16 +66,14 @@ function runBotVersusLoop(roomId) {
             }
             runBotVersusLoop(roomId);
         });
-    }, Math.floor(2000 + Math.random() * 2000));
+    }, Math.floor(1800 + Math.random() * 1700));
 }
 
 // HÀM KIỂM TRA VÀ TỰ ĐỘNG CHO BOT ĐÓNG GIẢ NGƯỜI CHƠI THẬT SAU 5 GIÂY ĐỢI LÂU
 function checkAndTriggerFakePlayerBot(roomId) {
     firebase.database().ref('rooms/' + roomId).once('value', snap => {
         const room = snap.val();
-        // Nếu phòng vẫn tồn tại, đang ở trạng thái 'waiting' và vị trí Player 2 thực sự vẫn trống
         if(room && room.status === 'waiting' && (!room.p2 || room.p2 === '')) {
-            // Đặt tên Bot giống hệt người chơi thật để họ không phát hiện ra
             const fakePlayerName = "NgườiChơi_" + Math.floor(100000 + Math.random() * 900000);
             
             firebase.database().ref('rooms/' + roomId).update({
@@ -75,7 +87,7 @@ function checkAndTriggerFakePlayerBot(roomId) {
 
 // KÍCH HOẠT BOT KHI NGƯỜI CHƠI THẬT ĐẤU VỚI MÁY (KHI ĐẾN LƯỢT ĐƯỜNG ĐI CỦA BOT)
 function triggerBotAIMove(roomId, movesArr) {
-    const delay = Math.floor(1500 + Math.random() * 1500); // Tốc độ phản hồi của Bot giả lập người từ 1.5s - 3s
+    const delay = Math.floor(1500 + Math.random() * 1500); 
     setTimeout(() => {
         firebase.database().ref('rooms/' + roomId).once('value', snap => {
             const room = snap.val();
@@ -101,7 +113,7 @@ function triggerBotAIMove(roomId, movesArr) {
     }, delay);
 }
 
-// THUẬT TOÁN AI MINIMAX RÚT GỌN TÍNH TOÁN ĐIỂM CHẶN VÀ ĐIỂM TẤN CÔNG CAO CẤP
+// THUẬT TOÁN AI MINIMAX TÍNH TOÁN ĐIỂM CHẶN VÀ ĐIỂM TẤN CÔNG ĐỐI KHÁNG CAO CẤP
 function computeAdvancedAIMinimax(movesArr, botRole) {
     const grid = {};
     const enemyRole = (botRole === 'p1') ? 'p2' : 'p1';
@@ -136,7 +148,9 @@ function computeAdvancedAIMinimax(movesArr, botRole) {
 
             const attackScore = evaluateCellForRole(r, c, botRole, grid);
             const defenseScore = evaluateCellForRole(r, c, enemyRole, grid);
-            const finalScore = attackScore + (defenseScore * 1.1);
+            
+            // Các Bot tranh đấu cực gắt: Ưu tiên bẫy tấn công tạo 4 nước và triệt hạ chặn 3 của đối phương cực mạnh
+            const finalScore = attackScore + (defenseScore * 1.15);
 
             if(finalScore > bestScore) {
                 bestScore = finalScore;
@@ -171,13 +185,13 @@ function evaluateCellForRole(r, c, role, grid) {
         if(!grid[`${rr}_${cc}`]) openEnds++; 
 
         if(count >= 4) {
-            totalScore += (openEnds === 2) ? 10000 : 5000; 
+            totalScore += (openEnds === 2) ? 12000 : 6000; 
         } else if(count === 3) {
-            totalScore += (openEnds === 2) ? 2000 : 500;  
+            totalScore += (openEnds === 2) ? 3000 : 700;  
         } else if(count === 2) {
-            totalScore += (openEnds === 2) ? 400 : 100;
+            totalScore += (openEnds === 2) ? 500 : 150;
         } else if(count === 1) {
-            totalScore += 10;
+            totalScore += 15;
         }
     }
     return totalScore;
