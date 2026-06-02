@@ -45,7 +45,7 @@ window.onload = function() {
     
     // SỰ KIỆN NÚT ĐỔI TÊN CHUYÊN NGHIỆP TÙY CHỈNH
     btnChangeUsername.onclick = function() {
-        const newName = prompt("Nhập tên mới của bạn (Có thể nhập chữ có dấu hoặc ký hiệu tùy thích):", myUsername);
+        const newName = prompt("Nhập tên mới của bạn:", myUsername);
         if(newName && newName.trim() !== "") {
             myUsername = newName.trim();
             displayMyUsername.innerText = myUsername;
@@ -77,7 +77,7 @@ function setupCanvasGrid() {
     }
 }
 
-// KÉO DI CHUYỂN CUỘN TRÊN ĐIỆN THOẠI VÀ MÁY TÍNH VÔ HẠN MƯỢT MÀ
+// KÉO DI CHUYỂN CUỘN MƯỢT MÀ VÔ HẠN
 function setupDragToScroll() {
     let isDown = false; let startX, startY, scrollLeft, scrollTop;
     boardWrapper.addEventListener('mousedown', (e) => {
@@ -100,14 +100,9 @@ function setupDragToScroll() {
     });
 }
 
-// KHỞI TẠO HỆ THỐNG SẢNH CHỜ VÀ ĐỒNG BỘ PHÒNG
+// KHỞI TẠO HỆ THỐNG SẢNH CHỜ VÀ ĐỒNG BỘ PHÒNG KHÔNG LỖI
 function initLobbySystem() {
-    // Ép làm sạch 7 phòng bot ngay khi ứng dụng khởi chạy để đẩy hết rác cũ đi
-    for (let i = 1; i <= 7; i++) {
-        resetBotVersusRoom(i);
-    }
-
-    // Đọc danh sách phòng theo thời gian thực từ Firebase
+    // Đọc danh sách phòng theo thời gian thực từ Firebase nguyên bản
     database.ref('rooms').on('value', snapshot => {
         roomListContainer.innerHTML = '';
         const allRooms = snapshot.val() || {};
@@ -119,14 +114,6 @@ function initLobbySystem() {
                 break; 
             }
             const room = allRooms[roomId] || { status: 'empty' };
-
-            // BỘ LỌC BẢO VỆ: Nếu phát hiện dữ liệu phòng cũ dính chữ botAI_, cắt bỏ ngay tại chỗ
-            if(room.p1 && room.p1.includes("botAI_")) {
-                room.p1 = room.p1.replace(/botAI_/g, "");
-            }
-            if(room.p2 && room.p2.includes("botAI_")) {
-                room.p2 = room.p2.replace(/botAI_/g, "");
-            }
 
             renderRoomCard(roomId, index, room);
             index++;
@@ -160,9 +147,13 @@ function initLobbySystem() {
         });
     };
 
-    // FIX TRIỆT ĐỂ: Ép nạp chuẩn 100% nội dung hướng dẫn tùy chỉnh từ file huongdan.js
+    // Ép nạp chuẩn nội dung hướng dẫn từ file huongdan.js khi nhấn nút
     document.getElementById('btn-guide').onclick = function() {
-        showModal(GAME_GUIDE_CONTENT.title, GAME_GUIDE_CONTENT.text);
+        if (typeof GAME_GUIDE_CONTENT !== 'undefined') {
+            showModal(GAME_GUIDE_CONTENT.title, GAME_GUIDE_CONTENT.text);
+        } else {
+            showModal("Hướng Dẫn", "Không tìm thấy nội dung file huongdan.js!");
+        }
     };
 }
 
@@ -214,7 +205,7 @@ function renderRoomCard(roomId, displayIndex, room) {
     roomListContainer.appendChild(card);
 }
 
-// THỦ TỤC VÀO PHÒNG CHƠI VÀ PHÂN VAI TRÒ (P1, P2 HOẶC VIEWER)
+// THỦ TỤC VÀO PHÒNG CHƠI VÀ PHÂN VAI TRÒ
 function joinGameRoom(roomId) {
     currentRoomId = roomId;
     
@@ -222,7 +213,7 @@ function joinGameRoom(roomId) {
         const room = snap.val();
         if(!room) return;
 
-        // Xác định vai trò
+        // Xác định vai trò chuẩn xác
         if(room.p1 === myUsername) {
             myRole = 'p1';
         } else if(room.p2 === myUsername) {
@@ -236,17 +227,53 @@ function joinGameRoom(roomId) {
             alert('Phòng đã đầy! Bạn đang vào xem trực tiếp ván đấu.');
         }
 
-        // Chuyển màn hình
+        // Chuyển màn hình giao diện
         screenLobby.classList.remove('active');
         screenGame.classList.add('active');
         document.getElementById('display-room-name').innerText = 'Phòng: ' + roomId.replace('room_', '');
+
+        // Bật vòng lặp đếm ngược 60 giây lượt đi đồng bộ
+        startTurnTimerCountdown();
 
         // Lắng nghe dữ liệu trận đấu thời gian thực từ Firebase
         listenToCurrentRoom();
     });
 }
 
-// VÒNG LẶP LẮNG NGHE BIẾN ĐỘNG TRONG PHÒNG ĐANG CHƠI
+// VÒNG LẶP ĐẾM NGƯỢC THỜI GIAN LƯỢT ĐI ĐỒNG BỘ 60S KHÔNG LỖI VÒNG LẶP
+function startTurnTimerCountdown() {
+    if(gameCountdownInterval) clearInterval(gameCountdownInterval);
+    gameCountdownInterval = setInterval(() => {
+        if(!currentRoomId || myRole === 'viewer') return;
+        
+        database.ref('rooms/' + currentRoomId).once('value', snap => {
+            const room = snap.val();
+            if(!room || room.status !== 'playing') {
+                clearInterval(gameCountdownInterval);
+                return;
+            }
+            
+            // Chỉ có chủ phòng P1 chịu trách nhiệm trừ giây trên Server để tránh xung đột trừ lặp
+            if(myRole === 'p1') {
+                let currentSec = room.timer || 60;
+                if(currentSec > 0) {
+                    database.ref('rooms/' + currentRoomId + '/timer').set(currentSec - 1);
+                } else {
+                    // Hết thời gian: Xử thua người đang đến lượt
+                    clearInterval(gameCountdownInterval);
+                    const loserRole = room.turn;
+                    const winnerName = loserRole === 'p1' ? (room.p2 || "Đối thủ") : (room.p1 || "Đối thủ");
+                    
+                    database.ref('rooms/' + currentRoomId + '/status').set('ended').then(() => {
+                        showModal('Hết Thời Gian!', `Lượt đi đã hết 60 giây! Người thắng cuộc ván này là: [${winnerName}]`);
+                    });
+                }
+            }
+        });
+    }, 1000);
+}
+
+// LẮNG NGHE BIẾN ĐỘNG TRONG PHÒNG ĐANG CHƠI TRÊN FIREBASE
 function listenToCurrentRoom() {
     database.ref('rooms/' + currentRoomId).on('value', snap => {
         const room = snap.val();
@@ -263,7 +290,7 @@ function listenToCurrentRoom() {
         document.getElementById('player1-box').style.boxShadow = room.turn === 'p1' ? '0 0 10px #00e5ff' : 'none';
         document.getElementById('player2-box').style.boxShadow = room.turn === 'p2' ? '0 0 10px #00e5ff' : 'none';
 
-        // Đếm ngược thời gian
+        // Đếm ngược thời gian hiển thị
         document.getElementById('game-timer').innerText = (room.timer || 60) + 's';
 
         // Vẽ lại toàn bộ quân cờ lên bàn cờ canvas dựa trên chuỗi moves lưu trữ trên server
@@ -280,13 +307,13 @@ function listenToCurrentRoom() {
             btnConfirmMove.disabled = true;
         }
 
-        // Xử lý tự động phân tích nếu đến lượt đi của tài khoản Bot giả lập người thật
+        // Xử lý tự động phân tích nếu đến lượt đi của tài khoản Bot giả lập người thật nguyên bản
         if(room.status === 'playing' && room.turn === 'p2' && isBotAccount(room.p2)) {
             if(!botMatchmakerTimeout) {
                 botMatchmakerTimeout = setTimeout(() => {
                     executeBotAiLogicTurn(currentRoomId, room.moves);
                     botMatchmakerTimeout = null;
-                }, Math.floor(2500 + Math.random() * 3000));
+                }, Math.floor(2000 + Math.random() * 2500));
             }
         }
 
@@ -305,16 +332,15 @@ function listenToCurrentRoom() {
     });
 }
 
-// VẼ LẠI QUÂN CỜ
+// VẼ LẠI QUÂN CỜ LÊN LƯỚI
 function renderPiecesFromMovesString(movesStr) {
-    // Xóa hết toàn bộ quân cờ cũ trên canvas grid cũ đi
     const oldPieces = boardCanvas.querySelectorAll('.piece');
     oldPieces.forEach(p => p.remove());
 
     if(!movesStr || movesStr.trim() === '') return;
 
     const movesArr = movesStr.split(';');
-    movesArr.forEach((move, idx) => {
+    movesArr.forEach((move) => {
         if(!move || move.trim() === "") return;
         const [r, c, role] = move.split(',');
         
@@ -370,7 +396,7 @@ btnConfirmMove.onclick = function() {
         const newMoveStr = `${selectedPreviewMove.r},${selectedPreviewMove.c},${selectedPreviewMove.role}`;
         currentMoves = currentMoves === '' ? newMoveStr : currentMoves + ';' + newMoveStr;
 
-        // Kiểm tra thắng cuộc bằng thuật toán quét chặn hai đầu
+        // Kiểm tra thắng cuộc bằng thuật toán quét chặn hai đầu nguyên bản
         const grid = {};
         currentMoves.split(';').forEach(m => {
             const [rr, cc, role] = m.split(',');
@@ -398,9 +424,9 @@ btnConfirmMove.onclick = function() {
     });
 };
 
-// THUẬT TOÁN QUÉT 5 QUÂN CARO LIÊN TIẾP CHẶN HAI ĐẦU CHUẨN XÁC KHÔNG LỖI
+// THUẬT TOÁN QUÉT 5 QUÂN CARO LIÊN TIẾP CHẶN HAI ĐẦU CHUẨN XÁC NGUYÊN BẢN
 function checkCaroWinWithBlockedEnds(r, c, role, grid) {
-    const directions = [[0,1], [1,0], [1,1], [1,-1]]; // Ngang, Dọc, Chéo xuôi, Chéo ngược
+    const directions = [[0,1], [1,0], [1,1], [1,-1]]; 
     const enemyRole = role === 'p1' ? 'p2' : 'p1';
 
     for(let [dr, dc] of directions) {
@@ -422,7 +448,6 @@ function checkCaroWinWithBlockedEnds(r, c, role, grid) {
 
         // Nếu xếp đủ từ 5 quân liên tiếp trở lên theo hàng
         if(count >= 5) {
-            // Nếu bị chặn đứng ở cả 2 đầu bởi quân địch, không tính thắng cuộc
             if(blockForward && blockBackward) {
                 continue; 
             }
@@ -450,7 +475,6 @@ function cleanUpAbandonedRooms() {
             const idx = parseInt(id.replace('room_',''));
             if(idx > 7) {
                 const room = rooms[id];
-                // Phòng tùy chỉnh tạo ra quá 1 tiếng mà không ai chơi thì dọn dẹp sạch
                 if(room.createdAt && Date.now() - room.createdAt > 3600000) {
                     database.ref('rooms/' + id).remove();
                 }
@@ -512,7 +536,7 @@ function handleRoomDisbanded() {
     screenLobby.classList.add('active');
 }
 
-// NÚT THOÁT KHỎI PHÒNG QUAY VỀ SẢNH CHỜ
+// NÚT THOÁT KHỎI PHÒNG QUAY VỀ SẢNH CHỜ KHÔNG ĐỂ LẠI RÁC VÀ PHÒNG RỖNG
 document.getElementById('btn-leave-room').onclick = function() {
     if(!currentRoomId) return;
     if(gameCountdownInterval) clearInterval(gameCountdownInterval);
