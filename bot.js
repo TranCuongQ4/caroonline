@@ -1,13 +1,14 @@
-// KHO TÊN THUẦN VIỆT 100% (KHÔNG SỐ, KHÔNG CHỮ CÁI LẠ, GIỐNG NGƯỜI THẬT HOÀN TOÀN)
-const FIRST_NAMES = ["Nguyễn ", "Trần ", "Lê ", "Phạm ", "Hoàng ", "Huỳnh ", "Phan ", "Vũ ", "Đặng ", "Bùi "];
+// KHO TÊN THUẦN VIỆT 100% HOÀN TOÀN TỰ NHIÊN (XÓA SẠCH MỌI TIỀN TỐ botAI_ HOẶC SỐ ĐUÔI)
+const FIRST_NAMES = ["Nguyễn ", "Trần ", "Lê ", "Phạm ", "Hoàng ", "Huỳnh ", "Phan ", "Vũ ", "Đặng ", "Bùi ", "Ngô ", "Dương ", "Lý "];
 const MIDDLE_AND_LAST_NAMES = [
     "Thành Danh", "Minh Quân", "Tuấn Anh", "Khánh Linh", "Bảo Thy", "Hoàng Long", 
     "Thùy Dương", "Hải Đăng", "Phương Thảo", "Quốc Cường", "Thành Đạt", "Ánh Tuyết", 
     "Đức Phúc", "Hồng Nhung", "Tiến Dũng", "Kim Oanh", "Văn Nam", "Thu Trang", 
-    "Gia Bảo", "Thanh Hải", "Trọng Nhân", "Hữu Phước", "Như Quỳnh", "Nhật Mai"
+    "Gia Bảo", "Thanh Hải", "Trọng Nhân", "Hữu Phước", "Như Quỳnh", "Nhật Mai",
+    "Hoàng Yến", "Minh Triết", "Quang Huy", "Thanh Trúc", "Đăng Khoa", "Tuyết Mai"
 ];
 
-// Mảng chứa toàn bộ các tên tạo lập để app.js tra cứu so khớp danh tính ngầm
+// Mảng đệm chứa danh sách tên để hệ thống app.js đối chiếu ngầm khi xử lý AI
 const ALL_PURE_VIET_NAMES = [];
 (function generateAllBotNamesCache() {
     FIRST_NAMES.forEach(f => {
@@ -21,7 +22,7 @@ function getRandomPureVietName() {
     return ALL_PURE_VIET_NAMES[Math.floor(Math.random() * ALL_PURE_VIET_NAMES.length)];
 }
 
-// HÀM RESET GIẢ LẬP TRẬN ĐẤU CỦA 2 BOT Ở 7 PHÒNG ĐẦU TIÊN LIÊN TỤC
+// TẠO TRẬN ĐẤU GIẢ CHO 7 PHÒNG ĐẦU TIÊN (BOT ĐẤU VỚI BOT MANG TÊN VIỆT HOÀN TOÀN)
 function resetBotVersusRoom(roomIndex) {
     const b1 = getRandomPureVietName();
     const b2 = getRandomPureVietName();
@@ -39,7 +40,7 @@ function resetBotVersusRoom(roomIndex) {
     });
 }
 
-// VÒNG LẶP CHO 2 BOT TỰ ĐẤU TRẬN GIẢ LẬP ĐỐI KHÁNG GAY GẮT TRÊN SERVER TRÔNG NHƯ ĐANG CÓ NGƯỜI CHƠI THẬT
+// VÒNG LẶP CHO 2 BOT TỰ CHƠI ĐỂ TẠO KHÔNG KHÍ SÔI ĐỘNG CHO WEB CỜ CARO ONLINE
 function runBotVersusLoop(roomId) {
     setTimeout(() => {
         if (currentRoomId !== roomId) return; 
@@ -55,7 +56,6 @@ function runBotVersusLoop(roomId) {
             let movesArr = room.moves ? room.moves.split(';') : [];
             const botRole = room.turn; 
             
-            // AI phân tích chiến thuật tấn công và chặn đòn chí mạng lẫn nhau cực gắt
             const aiMove = computeAdvancedAIMinimax(movesArr, botRole);
             movesArr.push(`${aiMove.r},${aiMove.c},${botRole}`);
             const updatedMovesStr = movesArr.filter(Boolean).join(';');
@@ -76,15 +76,15 @@ function runBotVersusLoop(roomId) {
             }
             runBotVersusLoop(roomId);
         });
-    }, Math.floor(1800 + Math.random() * 1700)); // Nhịp độ hạ quân tự nhiên từ 1.8s đến 3.5s
+    }, Math.floor(2000 + Math.random() * 2000)); // Thời gian hạ quân từ 2 đến 4 giây như người thật
 }
 
-// HÀM KIỂM TRA VÀ TỰ ĐỘNG CHO BOT ĐÓNG GIẢ NGƯỜI CHƠI THẬT VÀO GHÉP CÙNG SAU 5 GIÂY ĐỢI LÂU
+// BOT ĐÓNG GIẢ NGƯỜI CHƠI THẬT VÀO GHÉP PHÒNG SAU 5 GIÂY NGƯỜI DÙNG TỰ TẠO PHÒNG MÀ CHỜ LÂU
 function checkAndTriggerFakePlayerBot(roomId) {
     firebase.database().ref('rooms/' + roomId).once('value', snap => {
         const room = snap.val();
         if(room && room.status === 'waiting' && (!room.p2 || room.p2 === '')) {
-            const fakePlayerName = getRandomPureVietName(); // Sử dụng tên Việt thuần túy không lộ vết
+            const fakePlayerName = getRandomPureVietName(); 
             
             firebase.database().ref('rooms/' + roomId).update({
                 p2: fakePlayerName,
@@ -95,7 +95,7 @@ function checkAndTriggerFakePlayerBot(roomId) {
     });
 }
 
-// KÍCH HOẠT BOT KHI NGƯỜI CHƠI THẬT ĐẤU VỚI MÁY
+// KÍCH HOẠT ĐI QUÂN CỦA BOT KHI ĐANG ĐẤU VỚI NGƯỜI CHƠI THẬT
 function triggerBotAIMove(roomId, movesArr) {
     const delay = Math.floor(1500 + Math.random() * 1500); 
     setTimeout(() => {
@@ -123,7 +123,7 @@ function triggerBotAIMove(roomId, movesArr) {
     }, delay);
 }
 
-// THUẬT TOÁN AI MINIMAX TÍNH TOÁN ĐIỂM CHẶN VÀ ĐIỂM TẤN CÔNG ĐỐI KHÁNG CAO CẤP
+// THUẬT TOÁN AI CHẤM ĐIỂM ĐI QUÂN NÂNG CAO
 function computeAdvancedAIMinimax(movesArr, botRole) {
     const grid = {};
     const enemyRole = (botRole === 'p1') ? 'p2' : 'p1';
@@ -143,8 +143,7 @@ function computeAdvancedAIMinimax(movesArr, botRole) {
     const searchRange = 2; 
 
     for(let r = 2; r < 78; r++) {
-        for(let c = 2; r < 78; c++) { // Vòng lặp bảo mật tính chu vi ô cờ ảo
-            if(c >= 78) break;
+        for(let c = 2; c < 78; c++) {
             if(grid[`${r}_${c}`]) continue; 
 
             let nearPiece = false;
@@ -160,8 +159,7 @@ function computeAdvancedAIMinimax(movesArr, botRole) {
             const attackScore = evaluateCellForRole(r, c, botRole, grid);
             const defenseScore = evaluateCellForRole(r, c, enemyRole, grid);
             
-            // Tỷ lệ chặn đòn gắt: Tăng hệ số phòng thủ lên 1.25 để ép bot chặn đứt nước 3 nước 4 cực căng, liên tục ép sân nhau
-            const finalScore = attackScore + (defenseScore * 1.25);
+            const finalScore = attackScore + (defenseScore * 1.3);
 
             if(finalScore > bestScore) {
                 bestScore = finalScore;
@@ -178,7 +176,7 @@ function computeAdvancedAIMinimax(movesArr, botRole) {
     return bestMove;
 }
 
-// HÀM CHẤM ĐIỂM HEURISTIC THEO ĐƯỜNG ĐI CHO AI
+// ĐÁNH GIÁ ĐIỂM THẾ CỜ ĐỂ BOT TẤN CÔNG HOẶC PHÒNG THỦ ĐIÊU LUYỆN
 function evaluateCellForRole(r, c, role, grid) {
     const directions = [[0,1], [1,0], [1,1], [1,-1]];
     let totalScore = 0;
