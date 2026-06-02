@@ -11,23 +11,30 @@
 body {
     background-color: #121214;
     color: #ffffff;
+
     display: flex;
     justify-content: center;
-    align-items: center;
+
+    align-items: flex-start;
+
     min-height: 100vh;
-    overflow: hidden;
+
+    overflow-y: auto;
+
+    overflow-x: hidden;
+
+    padding: 20px 0;
 }
 
 /* CONTAINER CHUẨN 375x667 */
-.app-container {
-    width: 375px;
-    height: 667px;
-    background-color: #1e1e24;
-    display: flex;
-    flex-direction: column;
-    position: relative;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-    overflow: hidden;
+.app-container{
+    width:100%;
+    max-width:375px;
+
+    min-height:100vh;
+    height:auto;
+
+    overflow:visible;
 }
 
 /* HEADERS & FOOTERS */
@@ -58,8 +65,12 @@ body {
     display: none;
     flex: 1;
     flex-direction: column;
+
     padding: 10px;
+
     overflow-y: auto;
+
+    -webkit-overflow-scrolling: touch;
 }
 
 .screen.active {
@@ -84,91 +95,171 @@ body {
     margin-bottom: 15px;
 }
 
-/* ĐỊNH DẠNG NÚT BẤM NỔI 3D CHUYÊN NGHIỆP */
-.btn {
-    flex: 1;
-    padding: 10px 12px;
-    border: none;
-    border-radius: 6px;
-    font-weight: bold;
-    cursor: pointer;
-    font-size: 14px;
-    position: relative;
-    transition: all 0.05s ease;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+/* =====================================================
+   BUTTON 3D NỔI CAO CẤP
+===================================================== */
+
+.btn{
+    flex:1;
+
+    position:relative;
+
+    padding:12px;
+
+    border:none;
+
+    border-radius:12px;
+
+    font-weight:700;
+
+    font-size:14px;
+
+    color:#fff;
+
+    cursor:pointer;
+
+    user-select:none;
+
+    transition:
+        transform .12s ease,
+        box-shadow .12s ease,
+        filter .12s ease;
+
+    text-shadow:
+        0 1px 2px rgba(0,0,0,.55);
+
+    box-shadow:
+        inset 0 2px 0 rgba(255,255,255,.35),
+        inset 0 -2px 0 rgba(0,0,0,.25),
+        0 6px 0 rgba(0,0,0,.35),
+        0 10px 16px rgba(0,0,0,.35);
 }
 
-/* HIỆU ỨNG ĐỔ KHỐI 3D DƯỚI CHÂN NÚT CHO TỪNG LOẠI */
-.btn-primary { 
-    background-color: #3f51b5; 
-    color: white; 
-    box-shadow: 0 4px 0 #283593;
-}
-.btn-secondary { 
-    background-color: #555564; 
-    color: white; 
-    box-shadow: 0 4px 0 #373742;
-}
-.btn-success { 
-    background-color: #4caf50; 
-    color: white; 
-    box-shadow: 0 4px 0 #2e7d32;
-}
-.btn-warning { 
-    background-color: #ff9800; 
-    color: white; 
-    box-shadow: 0 4px 0 #ef6c00;
-}
-.btn-danger { 
-    background-color: #f44336; 
-    color: white; 
-    box-shadow: 0 4px 0 #c62828;
+/* phản sáng phía trên */
+.btn::before{
+    content:"";
+
+    position:absolute;
+
+    left:6px;
+    right:6px;
+    top:4px;
+
+    height:40%;
+
+    border-radius:10px;
+
+    background:
+        linear-gradient(
+            rgba(255,255,255,.35),
+            rgba(255,255,255,0)
+        );
+
+    pointer-events:none;
 }
 
-/* HÀNH ĐỘNG NHẤN NÚT LÚN XUỐNG 3D THẬT */
-.btn:active:not(:disabled) {
-    transform: translateY(3px);
-    box-shadow: 0 1px 0 transparent !important;
+/* hover */
+.btn:hover{
+    filter:brightness(1.08);
+
+    transform:translateY(-2px);
+
+    box-shadow:
+        inset 0 2px 0 rgba(255,255,255,.4),
+        inset 0 -2px 0 rgba(0,0,0,.25),
+        0 8px 0 rgba(0,0,0,.35),
+        0 14px 20px rgba(0,0,0,.4);
 }
 
-.btn:disabled {
-    background-color: #33333a !important;
-    color: #777780 !important;
-    box-shadow: 0 0px 0 transparent !important;
-    cursor: not-allowed;
-    opacity: 0.6;
-    transform: none !important;
+/* nhấn xuống */
+.btn:active{
+    transform:translateY(5px);
+
+    box-shadow:
+        inset 0 2px 0 rgba(255,255,255,.2),
+        inset 0 -2px 0 rgba(0,0,0,.25),
+        0 2px 0 rgba(0,0,0,.35),
+        0 4px 8px rgba(0,0,0,.25);
 }
 
-/* NÚT XÁC NHẬN NƯỚC ĐI TO NỔI 3D DƯỚI BÀN CỜ */
-.btn-action-confirm {
-    width: 100%;
-    padding: 12px;
-    background-color: #ff9800;
-    color: white;
-    font-size: 15px;
-    font-weight: bold;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    margin-bottom: 8px;
-    box-shadow: 0 4px 0 #ef6c00;
-    transition: all 0.05s ease;
-    text-transform: uppercase;
+/* =====================================================
+   MÀU NÚT
+===================================================== */
+
+/* XANH DƯƠNG */
+.btn-primary{
+    background:
+        linear-gradient(
+            to bottom,
+            #6d8cff 0%,
+            #4c6dff 45%,
+            #2849d8 100%
+        );
 }
 
-.btn-action-confirm:active:not(:disabled) {
-    transform: translateY(3px);
-    box-shadow: 0 1px 0 transparent !important;
+/* XÁM */
+.btn-secondary{
+    background:
+        linear-gradient(
+            to bottom,
+            #8f8f8f 0%,
+            #666 45%,
+            #444 100%
+        );
 }
 
-.btn-action-confirm:disabled {
-    background-color: #2d2d35 !important;
-    color: #555560 !important;
-    box-shadow: 0 0px 0 transparent !important;
-    cursor: not-allowed;
-    transform: none !important;
+/* XANH LÁ */
+.btn-success{
+    background:
+        linear-gradient(
+            to bottom,
+            #7df59d 0%,
+            #45c860 45%,
+            #23833a 100%
+        );
+}
+
+/* CAM */
+.btn-warning{
+    background:
+        linear-gradient(
+            to bottom,
+            #ffd36e 0%,
+            #ffae00 45%,
+            #d87f00 100%
+        );
+}
+
+/* ĐỎ */
+.btn-danger{
+    background:
+        linear-gradient(
+            to bottom,
+            #ff9087 0%,
+            #f44336 45%,
+            #b71c1c 100%
+        );
+}
+
+/* =====================================================
+   NÚT KHÓA
+===================================================== */
+
+.btn:disabled{
+    cursor:not-allowed;
+
+    color:#999 !important;
+
+    background:#444 !important;
+
+    opacity:.7;
+
+    transform:none !important;
+
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.15),
+        0 3px 0 rgba(0,0,0,.25),
+        0 5px 8px rgba(0,0,0,.2);
 }
 
 /* GRID DANH SÁCH PHÒNG SẢNH CHỜ */
@@ -182,191 +273,177 @@ body {
 
 .room-list-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(3, 1fr); /* Giữ nguyên cấu trúc 3 phòng trên 1 hàng ngang */
     gap: 10px;
     overflow-y: auto;
     flex: 1;
     padding-bottom: 10px;
-    align-content: start;
+    align-content: start; /* Ép grid dồn lên trên, không kéo dài thẻ phòng */
 }
 
 .room-card {
-    background-color: #22222a;
-    border: 1px solid #2a2a35;
-    border-radius: 6px;
-    padding: 8px 4px;
+    background-color: #25252d;
+    border: 1px solid #3a3a45;
+    border-radius: 8px;
+    padding: 8px;
     text-align: center;
-    cursor: pointer;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
-    min-height: 95px;
-    transition: all 0.2s;
-    box-shadow: 0 3px 0 #15151c;
+    align-items: center;
+    position: relative;
+    cursor: pointer;
+    height: auto; /* Tự động co gọn chiều cao ôm sát dòng chữ trạng thái */
 }
 
-.room-card:active {
-    transform: translateY(2px);
-    box-shadow: 0 1px 0 transparent;
+.room-icon {
+    width: 40px;
+    height: 40px;
+    background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%233f51b5"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>') no-repeat center;
+    background-size: contain;
+    margin-bottom: 5px;
 }
 
-.room-card.playing { border-color: #f44336; background-color: #2a1b1b; }
-.room-card.waiting { border-color: #4caf50; background-color: #1b2a1c; }
-.room-card.empty { border-color: #444; opacity: 0.4; background-color: #16161a; cursor: default; box-shadow: none; transform: none; }
+.room-card.is-bot .room-icon {
+    background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%234caf50"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>') no-repeat center;
+    background-size: contain;
+}
 
-.room-id { font-size: 11px; font-weight: bold; color: #aaa; margin-bottom: 2px; }
-.room-card.playing .room-id { color: #ff8a80; }
-.room-card.waiting .room-id { color: #b9f6ca; }
+.room-name { font-size: 12px; font-weight: bold; }
+.room-status { font-size: 10px; color: #aaa; margin-top: 3px; }
+.room-lock { position: absolute; top: 3px; right: 3px; font-size: 10px; }
 
-.room-vs { font-size: 10px; color: #fff; margin: 4px 0; word-break: break-all; line-height: 1.2; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; height: 24px; }
-.room-status { font-size: 10px; padding: 2px 4px; border-radius: 3px; font-weight: bold; display: inline-block; margin-top: auto; }
-
-.room-card.playing .room-status { background-color: #f44336; color: white; }
-.room-card.waiting .room-status { background-color: #4caf50; color: white; }
-.room-card.empty .room-status { background-color: #555; color: #aaa; }
-
-/* KHU VỰC TRẬN ĐẤU */
-.game-header-bar {
+/* GIAO DIỆN PHÒNG CHƠI GAME */
+.game-header {
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    margin-bottom: 8px;
+    font-weight: bold;
+    color: #00e5ff;
+    margin-bottom: 5px;
 }
-.game-header-bar .btn { flex: none; padding: 6px 12px; font-size: 12px; }
 
-.room-indicator { font-size: 13px; color: #00e5ff; font-weight: bold; }
+#game-timer {
+    color: #ff1744;
+}
 
-.players-status-container {
+.players-info {
     display: flex;
     justify-content: space-between;
     align-items: center;
     background-color: #16161a;
-    padding: 6px 8px;
+    padding: 6px;
     border-radius: 6px;
     margin-bottom: 8px;
-    border: 1px solid #2a2a35;
 }
 
-.player-status-card {
+.player-card {
     display: flex;
     align-items: center;
-    gap: 6px;
-    width: 40%;
-}
-#player2-box { justify-content: flex-end; text-align: right; }
-
-.role-badge {
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-weight: bold;
-    font-size: 12px;
-}
-.white-badge { background-color: #ffffff; color: #000000; box-shadow: 0 0 6px #fff; }
-.black-badge { background-color: #000000; color: #ffffff; border: 1px solid #ffffff; box-shadow: 0 0 6px #000; }
-
-.player-username {
-    font-size: 11px;
-    color: #ffffff;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 75px;
-}
-
-.vs-timer-center { text-align: center; width: 20%; }
-.vs-text { font-size: 10px; color: #777; font-weight: bold; }
-.countdown-timer { font-size: 14px; color: #ffea00; font-weight: bold; text-shadow: 0 0 4px rgba(255,234,0,0.5); }
-
-/* BÀN CỜ CARO MƯỢT MÀ VÀ QUÂN CỜ NỔI */
-.board-wrapper {
+    gap: 5px;
     flex: 1;
-    background-color: #25252d;
-    border: 1px solid #3a3a4a;
-    border-radius: 6px;
-    overflow: auto;
-    position: relative;
-    margin-bottom: 8px;
 }
+
+.player-card.active-turn {
+    border: 1px solid #00e5ff;
+    box-shadow: 0 0 5px #00e5ff;
+    border-radius: 4px;
+    padding: 2px;
+}
+
+.p-name { font-size: 11px; max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.vs-text { font-size: 12px; color: #777; padding: 0 5px; }
+
+/* KHU VỰC BÀN CỜ VÔ HẠN */
+.board-wrapper {
+    width: 100%;
+    height: 250px;
+    background-color: #111;
+    overflow: auto;
+    border: 2px solid #3a3a45;
+    position: relative;
+    cursor: grab;
+}
+
+.board-wrapper:active { cursor: grabbing; }
 
 .board-canvas {
     width: 2000px;
     height: 2000px;
     position: relative;
+    /* Hiệu ứng mô phỏng vân gỗ và đường kẻ ô đen */
+    background-color: #8B5A2B;
     background-image: 
-        linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
-    background-size: 25px 25px;
+        linear-gradient(rgba(0, 0, 0, 0.15) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 0, 0, 0.15) 1px, transparent 1px),
+        linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)),
+        repeating-linear-gradient(45deg, rgba(160,82,45,0.2) 0px, rgba(160,82,45,0.2) 2px, transparent 2px, transparent 10px);
+    background-size: 25px 25px, 25px 25px, auto, auto;
 }
 
+/* ĐỊNH DẠNG QUÂN CỜ 3D */
 .cell {
     position: absolute;
     width: 25px;
     height: 25px;
-    border-right: 1px solid rgba(255,255,255,0.03);
-    border-bottom: 1px solid rgba(255,255,255,0.03);
-    cursor: pointer;
-}
-
-.piece {
-    position: absolute;
-    width: 21px;
-    height: 21px;
-    border-radius: 50%;
-    margin: 2px;
     display: flex;
     justify-content: center;
     align-items: center;
-    font-weight: bold;
-    font-size: 13px;
-    animation: dropPiece 0.15s ease-out forwards;
-    pointer-events: none;
 }
 
-@keyframes dropPiece {
-    0% { transform: scale(0.3); opacity: 0.5; }
-    100% { transform: scale(1); opacity: 1; }
+.piece {
+    width: 21px;
+    height: 21px;
+    border-radius: 50%;
+    transition: all 0.1s ease;
 }
 
-.piece.p1-piece { background-color: #ffffff; color: #000000; box-shadow: 0 2px 4px rgba(0,0,0,0.4); }
-.piece.p2-piece { background-color: #1a1a1a; color: #ffffff; border: 1px solid #444; box-shadow: 0 2px 4px rgba(0,0,0,0.6); }
-
-.piece.preview-piece {
-    opacity: 0.4 !important;
-    animation: blinkPreview 0.8s infinite alternate;
+/* Quân Trắng 3D nổi khối */
+.piece.white {
+    background: radial-gradient(circle at 30% 30%, #ffffff 0%, #e0e0e0 60%, #999999 100%);
+    box-shadow: inset -2px -2px 4px #777, 2px 2px 4px rgba(0,0,0,0.6);
 }
 
-@keyframes blinkPreview {
-    0% { opacity: 0.2; }
-    100% { opacity: 0.6; }
+/* Quân Đen 3D nổi khối */
+.piece.black {
+    background: radial-gradient(circle at 30% 30%, #555555 0%, #1a1a1a 60%, #000000 100%);
+    box-shadow: inset -2px -2px 4px #000, inset 1px 1px 2px #888, 2px 2px 4px rgba(0,0,0,0.8);
 }
 
-/* TIN NHẮN CHAT */
-.game-footer-controls {
+/* Quân đặt thử (Mờ) */
+.piece.preview {
+    opacity: 0.5;
+    animation: pulse 1s infinite alternate;
+}
+
+@keyframes pulse { from { opacity: 0.3; } to { opacity: 0.7; } }
+
+.game-controls {
     display: flex;
-    flex-direction: column;
+    gap: 5px;
+    margin: 8px 0;
 }
 
-.chat-system-box {
+.game-controls .btn { padding: 8px; font-size: 12px; }
+
+/* KHU VỰC CHAT CHUYÊN NGHIỆP */
+.chat-container {
     background-color: #16161a;
     border: 1px solid #2a2a35;
     border-radius: 6px;
     display: flex;
     flex-direction: column;
-    height: 110px;
-}
-
-.chat-logs-wrapper {
     flex: 1;
-    padding: 6px;
-    overflow-y: auto;
-    font-size: 11px;
+    min-height: 120px;
+    max-height: 150px;
 }
 
-.chat-row { margin-bottom: 4px; word-break: break-all; }
+.chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 6px;
+    font-size: 12px;
+}
+
+.chat-line { margin-bottom: 4px; word-break: break-all; }
 .chat-user { color: #00e5ff; font-weight: bold; }
 .chat-text { color: #fff; }
 
@@ -396,36 +473,65 @@ body {
     outline: none;
 }
 
-.chat-input-row button {
-    background-color: #3f51b5;
-    color: white;
-    border: none;
-    padding: 6px 12px;
-    font-size: 12px;
-    cursor: pointer;
+.chat-input-row button{
+    border:none;
+
+    color:#fff;
+
+    font-weight:bold;
+
+    padding:6px 12px;
+
+    cursor:pointer;
+
+    border-radius:8px;
+
+    background:
+        linear-gradient(
+            to bottom,
+            #6d8cff,
+            #4c6dff,
+            #2849d8
+        );
+
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.35),
+        0 4px 0 rgba(0,0,0,.35),
+        0 6px 10px rgba(0,0,0,.3);
+
+    transition:.12s;
+}
+
+.chat-input-row button:active{
+    transform:translateY(3px);
+
+    box-shadow:
+        0 1px 0 rgba(0,0,0,.35),
+        0 2px 4px rgba(0,0,0,.25);
 }
 
 /* MODAL / POPUP THÔNG BÁO */
 .modal-overlay {
     position: absolute;
     top: 0; left: 0; width: 100%; height: 100%;
-    background-color: rgba(0,0,0,0.75);
+    background: rgba(0,0,0,0.75);
     display: none;
     justify-content: center;
     align-items: center;
-    z-index: 9999;
+    z-index: 999;
 }
 
 .modal-overlay.active { display: flex; }
 
 .modal-content {
-    background-color: #22222a;
-    border: 2px solid #3f51b5;
+    background-color: #25252d;
+    width: 290px;
+    padding: 20px;
     border-radius: 8px;
-    width: 300px;
-    padding: 15px;
     text-align: center;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    border: 1px solid #444;
 }
 
-.modal-content h3 { font-size: 16px; margin-bottom: 10px; color: #00e5ff; }
+.modal-content h3 { margin-bottom: 10px; color: #00e5ff; }
+.modal-content p { font-size: 13px; color: #ccc; margin-bottom: 15px; line-height: 1.4; }
+.modal-buttons { display: flex; gap: 10px; }
