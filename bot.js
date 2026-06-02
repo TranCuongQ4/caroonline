@@ -1,7 +1,7 @@
 // HÀM RESET GIẢ LẬP TRẬN ĐẤU CỦA 2 BOT Ở BA PHÒNG ĐẦU TIÊN TIÊN LIÊN TỤC
 function resetBotVersusRoom(roomIndex) {
-    const b1 = "caro" + Math.floor(100000 + Math.random() * 900000);
-    const b2 = "caro" + Math.floor(100000 + Math.random() * 900000);
+    const b1 = "bot_" + Math.floor(100000 + Math.random() * 900000);
+    const b2 = "bot_" + Math.floor(100000 + Math.random() * 900000);
     const roomId = 'room_' + roomIndex;
 
     firebase.database().ref('rooms/' + roomId).set({
@@ -18,7 +18,10 @@ function resetBotVersusRoom(roomIndex) {
 
 // VÒNG LẶP CHO 2 BOT TỰ ĐẤU TRẬN GIẢ LẬP TRÊN SERVER CẢ NGÀY KHÔNG DỪNG
 function runBotVersusLoop(roomId) {
+    // Đặt thời gian Bot suy nghĩ thực tế từ 2 đến 4 giây để người xem thấy cờ chạy liên tục
     setTimeout(() => {
+        if (currentRoomId !== roomId) return; // Nếu người xem thoát phòng này rồi thì dừng luồng lặp lại để tránh tốn tài nguyên
+        
         firebase.database().ref('rooms/' + roomId).once('value', snap => {
             const room = snap.val();
             if(!room || room.status !== 'playing') {
@@ -51,16 +54,15 @@ function runBotVersusLoop(roomId) {
                     timer: 60
                 });
             }
-            // Lặp lại chu kỳ nước đi ngẫu nhiên từ 4s đến 10s cho giống người thật
+            // Tiếp tục vòng lặp tự đánh cho ván tiếp theo
             runBotVersusLoop(roomId);
         });
-    }, Math.floor(4000 + Math.random() * 6000));
+    }, Math.floor(2000 + Math.random() * 2000));
 }
 
 // KÍCH HOẠT BOT KHI NGƯỜI CHƠI THẬT ĐẤU VỚI MÁY (KHI PHÒNG TRỐNG CHƯA AI VÀO)
 function triggerBotAIMove(roomId, movesArr) {
-    // Trì hoãn thời gian suy nghĩ ngẫu nhiên giả lập tâm lý từ 4 đến 10 giây
-    const delay = Math.floor(4000 + Math.random() * 6000);
+    const delay = Math.floor(2000 + Math.random() * 2000);
     setTimeout(() => {
         firebase.database().ref('rooms/' + roomId).once('value', snap => {
             const room = snap.val();
