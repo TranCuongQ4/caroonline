@@ -37,6 +37,32 @@ document.addEventListener('contextmenu', e => e.preventDefault());
 
 // KHỞI ĐỘNG HỆ THỐNG GIAO DIỆN
 window.onload = function() {
+    // === CODE KIỂM TRA VÀ TỰ ĐỘNG RESET PHÒNG SANG NGÀY MỚI ===
+    database.ref('metadata/last_reset_day').once('value', snapshot => {
+        // Lấy ngày hiện tại theo định dạng ngày/tháng/năm của Việt Nam
+        const todayStr = new Date().toLocaleDateString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
+        const lastResetDay = snapshot.val();
+
+        // Nếu ngày hôm nay khác với ngày reset gần nhất lưu trên hệ thống
+        if (lastResetDay !== todayStr) {
+            database.ref('rooms').once('value', roomSnap => {
+                const allRooms = roomSnap.val() || {};
+                
+                // Duyệt qua tất cả các phòng, tiến hành xóa các phòng rác do người chơi tạo (từ phòng 8 trở đi)
+                Object.keys(allRooms).forEach(roomId => {
+                    const idx = parseInt(roomId.replace('room_', ''));
+                    if (idx > 7) {
+                        database.ref('rooms/' + roomId).remove();
+                    }
+                });
+
+                // Sau khi xóa xong, cập nhật ngày hôm nay thành ngày reset gần nhất
+                database.ref('metadata/last_reset_day').set(todayStr);
+                console.log("Hệ thống đã được dọn dẹp sạch sẽ cho ngày mới: " + todayStr);
+            });
+        }
+    });
+
     displayMyUsername.innerText = myUsername;
 
     initLobbySystem();
@@ -480,6 +506,7 @@ btnConfirmMove.onclick = function() {
     });
 };
 
+// KIỂM TRA ĐIỀU KIỆN THẮNG 5 QUÂN KHÔNG BỊ CHẶN 2 ĐẦU
 function checkWinCondition(r, c, role, movesArr) {
     const grid = {};
     movesArr.forEach(m => {
@@ -555,7 +582,7 @@ document.getElementById('btn-new-game').onclick = function() {
             if(confirm("Bạn có muốn gửi yêu cầu làm ván mới tới đối thủ?")) {
                 database.ref('rooms/' + currentRoomId + '/chats').once('value', cSnap => {
                     let chats = cSnap.val() || [];
-                    chats.push({ sender: "Hệ thống", msg: `👉 ${myUsername} muốn xin chơi Ván Mới.` });
+                                        chats.push({ sender: "Hệ thống", msg: `👉 ${myUsername} muốn xin chơi Ván Mới.` });
                     database.ref('rooms/' + currentRoomId + '/chats').set(chats);
                 });
             }
