@@ -1,12 +1,13 @@
 // === CẤU HÌNH THÔNG SỐ VÀO ĐÂY ===
 const firebaseConfig = {
-    apiKey: "AIzaSyYOUR_API_KEY_HERE",
-    authDomain: "your-app.firebaseapp.com",
-    databaseURL: "https://cuongdata-default-rtdb.asia-southeast1.firebasedatabase.app/",
-    projectId: "your-app",
-    storageBucket: "your-app.appspot.com",
-    messagingSenderId: "1234567890",
-    appId: "1:1234:web:1234"
+  apiKey: "AIzaSyCwgBsmd9GFtIp3LD_aBV_VYZCheb2CvgI",
+  authDomain: "cuongdata.firebaseapp.com",
+  databaseURL: "https://cuongdata-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "cuongdata",
+  storageBucket: "cuongdata.firebasestorage.app",
+  messagingSenderId: "10726452052",
+  appId: "1:10726452052:web:fc724b6775f492cdf136c1",
+  measurementId: "G-PJJMR87MTJ"
 };
 
 // Khởi tạo kết nối với Firebase
